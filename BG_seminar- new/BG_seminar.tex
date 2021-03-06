@@ -194,6 +194,7 @@ When Pauli strings are used as in Eq.~(\ref{BG:pauli_generator}), this becomes a
 
 
 \subsection{Problem-inspired ansatz construction}
+\label{BG:problem_inspired}
 Historically, problem-inspired ansatz were the first to be proposed and implemented on actual hardware. Unitary Coupled Cluster (UCC) ansatz \cite{taube and bartlett 2006}, Variational Hamiltonian Ansatz (VHA) \cite{mcclean2016, wecker2015}, factorized UCC and adaptive apparoaches are a few such problem inspired variational ansatz that stem from quantum chemistry and many-body physics. 
 Within so-called problem-inspired approaches, unitary evolution is in the form of Eq.~(\ref{BG:arbitrary_unitary}), with generators $\hat{g}$ derived from the system properties. Knowledge about the physics behind the problem Hamiltonian being trotterized can reduce substantially the number of gates needed to implementing the Suzuki-Trotter method. Let us now look at a couple of problem inspired ansatz examples.
 
@@ -208,21 +209,19 @@ Typically, we expect the ground state of an interacting system to be a linear co
     \hat{T}^{(1)} & = \sum_{\substack{i,j~ \in~ \text{empty} \\ k,l~ \in ~\text{filled}}} \theta^{i,j}_{k,l}~ \hat{c}_i^\dagger\hat{c}_j^\dagger \hat{c}_k\hat{c}_l~~~~ &\text{(Double excitations)}.
 \end{align}
 \end{subequations}
-The operator $\hat{c}_i$ refers to the fermionic annihilation operator of the $i$-th Hartree-Fock orbital and the sets \emph{empty} and \emph{filled} refer to the corresponding occupied and unoccupied Hartree-Fock orbitals. Here, $\theta^i_k$ and $\theta^{i,j}_{k,l}$ are the free parameters of the problem. Due to the decreasing importance of higher $\hat{T}^{(k)}$, the series is usually truncated after the second or third term. The ansatz is termed UCCSD or UCCSDT, respectively referring to the inclusion of single, double and triple excitations from the Hartree-Fock ground state. To implement this ansatz on a quantum computer, second quantization methods are used to map the fermionic operators to the qubit operators\footnote{There are many variants of the UCC ansatz, with some of them reducing the depth of the quantum circuit by considering more efficient methods for compiling the fermionic operators using group theory.} resulting in an ansatz of the form in Eq.~(\ref{BG:trotterization}). It is later on converted to a parametrized ansatz via the Trotterization.
+The operator $\hat{c}_i$ refers to the fermionic annihilation operator of the $i$-th Hartree-Fock orbital and the sets \emph{empty} and \emph{filled} refer to the corresponding occupied and unoccupied Hartree-Fock orbitals. Here, $\theta^i_k$ and $\theta^{i,j}_{k,l}$ are the free parameters of the problem. Due to the decreasing importance of higher $\hat{T}^{(k)}$, the series is usually truncated after the second or third term. The ansatz is termed UCCSD or UCCSDT, respectively referring to the inclusion of single, double and triple excitations from the Hartree-Fock ground state. To implement this ansatz on a quantum computer, second quantization methods are used to map the fermionic operators to the qubit operators\footnote{There are many variants of the UCC ansatz, with some of them reducing the depth of the quantum circuit by considering more efficient methods for compiling the fermionic operators using group theory.} resulting in an ansatz of the form in Eq.~(\ref{BG:trotterization}). It is later on converted to a parametrized ansatz via the Trotterization. The hands on example under Section~\ref{BG:hands_on} will explore the UCCSD ansatz applied to $H_2$ molecule. 
 
 
 \subsubsection{Example 2 : The Quantum Alternating Operator Ansatz}
-
-
-
-
-
-
-
+The Quantum Alternating Operator Ansatz was originally introduced as a part of the QAOA algorithm \cite{farhi}, and later generalized as a standalone variational ansatz. One can imagine the QAOA as a Trotterized version of quantum annealing where the order $p$ of the Trotterization determines the precision of the solution. Indeed, the adiabatic evolution can be obtained in the limit of $p \rightarrow \infty$. The goal of QAOA is to map an input state $\ket{\psi_0}$ , to the ground state of the problem Hamiltonian $\hat{H}_C$ by applying a unitary $e^{-i\gamma_j \hat{H}_C}$ and a mixer unitary $e^{-i\beta_j \hat{H}_M}$ sequentially. That is,
+\begin{equation}
+    U(\vec{\gamma},\vec{\beta}) = \prod_{j=1}^p~e^{-i\beta_j \hat{H}_M}~e^{-i\gamma_j \hat{H}_C},
+\end{equation}
+where $\vec{\theta} = (\vec{\gamma},\vec{\beta}))$.  A key strength of QAOA is the fact that the feasible subspace for certain problems is smaller than the complete Hilbert space, and this restriction results in a better performing algorithm.
 
 
 \subsection{Hardware-specific ansatz construction}
-
+\label{BG:hardware_specific}
 
 
 
@@ -244,16 +243,16 @@ Information about the dynamics of a system is encoded in its Hamiltonian $\hat{H
 \end{equation}
 In this case it is apparent that the corresponding cost function is given by
 \begin{equation}
-	f_{\hat{H}}(\vec{\theta})= \expval*{\hat{H}}{\psi({\vec{\theta}})}
+	f_{\hat{H}}(\vec{\theta})= \expval*{\hat{H}}{\psi({\vec{\theta}})}.
 \end{equation}
-
+The UCCSD ansatz from Section~\ref{BG:problem_inspired} and the hardware efficient ansatz from Section~\ref{BG:hardware_specific} are used commonly to solve problems of this kind. This will also be the example problem analysed under Section~\ref{BG:hands_on}.
 
 \subsubsection{Example 2 : Approximating optimization problems}
- For problems unrelated to physical systems, encoding into an equivalent qubit Hamiltonian is still possible, thereby opening a path to solving them on a quantum computer. To solve a combinatorial optimization problem using a quantum algorithms, the problem is first encoded onto a quantum system> one of the most widely used model in physics, that is also used to represent optimization problems, is the Ising model. A quantum version of it can be obtained easily by replacing the spin variables with Pauli $Z$-operators
+ For problems unrelated to physical systems, encoding into an equivalent qubit Hamiltonian is still possible, thereby opening a path to solving them on a quantum computer. To solve a combinatorial optimization problem using a quantum algorithms, the problem is first encoded onto a quantum system. One of the most widely used model in physics, that is also used to represent optimization problems, is the Ising model. A quantum version of it can be obtained easily by replacing the spin variables with Pauli $Z$-operators
  \begin{equation}
  	\hat{H}_C\equiv\hat{H}(\hat{\sigma_1^z, \ldots, \sigma_n^z })= - \sum_{1 \leq i < j \leq n} J_{ij}\sigma_i^z \sigma_j^z - \sum_{i=1}^n h_i\sigma_i^z
  \end{equation} 
-where $J_{ij}$ and $h_i$ are real numbers, and $\sigma_i^z$ refers to the Pauli $Z$-operator acting on the $i^{\text{th}}$ qubit. In fact, several NP-complete optimization problems and even many NP-hard problems can naturally be expressed as a problem of finding the ground state, or minimum energy configuration, of a quantum Ising Hamiltonian by choosing appropriate values for $J_{ij}$ and $h_i$ \cite{https://www.frontiersin.org/articles/10.3389/fphy.2014.00005/full}.
+where $J_{ij}$ and $h_i$ are real numbers, and $\sigma_i^z$ refers to the Pauli $Z$-operator acting on the $i^{\text{th}}$ qubit. In fact, several NP-complete optimization problems and even many NP-hard problems can naturally be expressed as a problem of finding the ground state, or minimum energy configuration, of a quantum Ising Hamiltonian by choosing appropriate values for $J_{ij}$ and $h_i$ \cite{https://www.frontiersin.org/articles/10.3389/fphy.2014.00005/full}. The QAOA ansatz from Section~\ref{BG:problem_inspired} is usually the preferred ansatz for solving these combinatorial optimization problems and one can read such an example of QAOA applied to a tail-gate assignment problem in Ref.~\cite{https://journals.aps.org/prapplied/abstract/10.1103/PhysRevApplied.14.034009}.
 \newline
 \newline
 To sum up the idea, a cost function defines a hyper-surface called the cost landscape that maps the trainable parameters to real numbers. The task of the optimizer is to traverse the cost landscape and find the global minima. The choice of optimizer depends on how complicated the landscape is, as discussed in detail under Section \ref{BG:optimization_routine}. Therefore, the choice of a good objective function is also crucial to ensure convergence to the solution in addition to the variational ansatz choice. A good objective function of a problem should meet the following criteria.\begin{enumerate}
@@ -350,6 +349,7 @@ Given below is a small selection of optimizers used commonly or promoted for VQA
 \section{Applications}
 
 \section{Hands-on tutorial: Simulating $H_2$ molecule using VQE}
+\label{BG:hands_on}
 \begin{itemize}
 	\item short outline of VQE
 	\item flow chart of the algorithm
