@@ -134,14 +134,7 @@ and the variational principle in Eq.~(\ref{BG:var_prin}) still holds. It can be 
 \begin{equation}
 	\expval*{\hat{O}}_\rho(\vec{\theta}) = \expval{\hat{O}}(\vec{\theta}) = \Tr [\rho(\vec{\theta}) \hat{O}] \geq \lambda_0.
 \end{equation}
-The fact that this principle still holds for mixed states is the main reason for the robustness of VQAs to errors and environmental influence. By finding the set of parameters $\vec{\theta}$ that minimizes $\expval*{\hat{O}}$, one is in effect, finding a set of \emph{experimental parameters} that are most likely to produce the ground state on average, potentially affecting a blind purification of the state of the system being produced \cite{theory of hybrid}. 
-
-
-
-
-
-
-
+The fact that this principle still holds for mixed states is the main reason for the robustness of VQAs to errors and environmental influence. By finding the set of parameters $\vec{\theta}$ that minimizes $\expval*{\hat{O}}$, one is in effect, finding a set of \emph{experimental parameters} that are most likely to produce the ground state on average, potentially affecting a blind purification of the state of the system being produced \cite{theory of hybrid}.  
 
 \section{Variational ansatz construction}
 
@@ -173,6 +166,7 @@ Taylor expanding Eq.~(\ref{BG:pauli_generator}) and using the properties of the 
 \end{align}
 The terms are just the Taylor expansions of $\sin$ and $\cos$ and thus, $U(t)$ becomes a single-qubit rotation given by
 \begin{equation}
+\label{BG:qubit_rotation}
     U_{\hat{P}}(\theta)=\cos{\theta}I-i\sin{\theta}\hat{P}.
 \end{equation}
 It is important to note that although $\hat{P}$ when acting as a unitary operator by itself does not generate any entanglement between the qubits, $U_{\hat{P}}(\theta)$ is an entangling gate! Not surprisingly, every possible operation on a quantum computer may be approximated by a series of $U_{\hat{P}}(\theta)$ for different operators $P_i$.
@@ -209,7 +203,7 @@ Typically, we expect the ground state of an interacting system to be a linear co
     \hat{T}^{(1)} & = \sum_{\substack{i,j~ \in~ \text{empty} \\ k,l~ \in ~\text{filled}}} \theta^{i,j}_{k,l}~ \hat{c}_i^\dagger\hat{c}_j^\dagger \hat{c}_k\hat{c}_l~~~~ &\text{(Double excitations)}.
 \end{align}
 \end{subequations}
-The operator $\hat{c}_i$ refers to the fermionic annihilation operator of the $i$-th Hartree-Fock orbital and the sets \emph{empty} and \emph{filled} refer to the corresponding occupied and unoccupied Hartree-Fock orbitals. Here, $\theta^i_k$ and $\theta^{i,j}_{k,l}$ are the free parameters of the problem. Due to the decreasing importance of higher $\hat{T}^{(k)}$, the series is usually truncated after the second or third term. The ansatz is termed UCCSD or UCCSDT, respectively referring to the inclusion of single, double and triple excitations from the Hartree-Fock ground state. To implement this ansatz on a quantum computer, second quantization methods are used to map the fermionic operators to the qubit operators\footnote{There are many variants of the UCC ansatz, with some of them reducing the depth of the quantum circuit by considering more efficient methods for compiling the fermionic operators using group theory.} resulting in an ansatz of the form in Eq.~(\ref{BG:trotterization}). It is later on converted to a parametrized ansatz via the Trotterization. The hands on example under Section~\ref{BG:hands_on} will explore the UCCSD ansatz applied to $H_2$ molecule. 
+The operator $\hat{c}_i$ refers to the fermionic annihilation operator of the $i$-th Hartree-Fock orbital and the sets \emph{empty} and \emph{filled} refer to the corresponding occupied and unoccupied Hartree-Fock orbitals. Here, $\theta^i_k$ and $\theta^{i,j}_{k,l}$ are the free parameters of the problem. Due to the decreasing importance of higher $\hat{T}^{(k)}$, the series is usually truncated after the second or third term. The ansatz is termed UCCSD or UCCSDT, respectively referring to the inclusion of single, double and triple excitations from the Hartree-Fock ground state. To implement this ansatz on a quantum computer, second quantization methods are used to map the fermionic operators to the qubit operators\footnote{There are many variants of the UCC ansatz, with some of them reducing the depth of the quantum circuit by considering more efficient methods for compiling the fermionic operators using group theory.} resulting in an ansatz of the form in Eq.~(\ref{BG:trotterization}). It is later on converted to a parametrized ansatz via the Trotterization. 
 
 
 \subsubsection{Example 2 : The Quantum Alternating Operator Ansatz}
@@ -220,10 +214,17 @@ The Quantum Alternating Operator Ansatz was originally introduced as a part of t
 where $\vec{\theta} = (\vec{\gamma},\vec{\beta}))$.  A key strength of QAOA is the fact that the feasible subspace for certain problems is smaller than the complete Hilbert space, and this restriction results in a better performing algorithm.
 
 
-\subsection{Hardware-specific ansatz construction}
+\subsection{Hardware-efficient ansatz construction}
 \label{BG:hardware_specific}
+Problem-inspired ansatz have been shown computationally, to ensure faster convergence to a satisfying solution. However the deeper circuits associated with Trotterization can be challenging to realize experimentally. The hardware-efficient ansatz is a generic name used for variational ansatz that are aimed at NISQ with focus on  circuit depth reduction.It was introduced in 2017 by Kandala and Mezzacapo as an experiment on a 7 qubit superconducting device \cite{kandala}. The key idea is to generate random parametrized quantum circuits only using the better performing native gates of the underlying hardware with a particular qubit topology. This avoids the circuit depth overhead arising from translating an arbitrary unitary into a the native gates. By doing so, one expects to reduce errors during the computation while being able to generate meaningful parametrized trial states. Let us now see, how one can construct such an ansatz with basic single-qubit gates and two-qubit entangling gates according to method presented in \cite{kandala}. 
 
+The circuit is constructed from \emph{blocks} of single-qubit gates and entangling gates applied to multiple qubits simultaneously. A single sequence of application of a block is called a \emph{layer}. The ansatz circuit generally has multiple such layers and it enables exploration of a larger portion of the Hilbert space. The unitary of a hardware-efficient ansatz with $N_l$ is given by
+\begin{equation}
+    U(\vec{\theta})= \prod_{k=1}^{N_l}~U_k(\theta_k) W_k,
+\end{equation}
+where $\vec{\theta}=(\theta_1,\ldots,\theta_{N_l})$ are the variational parameters, unitary $~U_k(\theta_k)= e^{-i\theta_k \hat{O}_k}$ is the unitary generated by the Hermitian operator $\hat{O}_k$, and $W_k$ represents the non-parametrized quantum gates. Typically $\hat{O}_k$ are Pauli strings acting locally on each qubit. In those cases, $U_k$ becomes a product of combinations of single-qubit rotations, each one defined as in Eq.~(\ref{BG:qubit_rotation}). $W_k$ is the entangling unitary constructed from the native gate set. For example for superconducting qubit architectures CNOT or CZ gates can be used and in trapped ion platforms XX gates can be used \cite{krantz2019, wright 2019}. The choice gate set, qubit topology and the ordering influences the subspace of the Hilbert space covered by the ansatz and how fast it converges to a solution for a specific problem.
 
+In an ideal case, one would expect to perform entangling gates between all pairs of qubits. However the reality is different due to the limited qubit connectivity which varies among different hardware platforms, thus limiting the ability to perform two-qubit entangling gates. One main advantage of this ansatz is its versatility and problem-agnostic nature. It is especially useful to study Hamiltonians that are similar to the interactions in the hardware. On the other hand the problem-agnostic nature also leads to problems in optimization when parameters are initialized randomly.  
 
 
 
