@@ -7,6 +7,8 @@
 \usepackage{amsthm}
 \usepackage{multirow}
 \usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{quantikz}
 
 %\theoremstyle{theorem}
 \newtheorem{definition}{Definition}[section]
@@ -268,37 +270,35 @@ Even though the properties given above sound trivial, they are difficult to sati
 
 
 \section{Measurement scheme}
-Let us now address the question of how to evaluate the VQA cost function defined in Eq.~{\ref{BG:cost_function}. Using Eq.~(\ref{BG:poly_sum}) and Theorem~\ref{BG:theorem_pauli_basis}, most interesting observables can be written as a linear combination of a polynomial number of Pauli strings with real coefficients, i.e.,
-	\begin{equation}
-	\label{BG:poly_pauli_sum}
-		\hat{O} = \sum_{i=1}^{\text{poly}(N)} c_i \sigma_i^\alpha
-	\end{equation}
-where $\alpha = x, y, z$ identify the Pauli spin operator. For example, most physically motivates Hamiltonians are $k$-local. That is, each of the Pauli strings in the sum acts nontrivially on at most $k$ qubits. Examples of $k$-local systems include Ising and Heisenberg spin systems, van der Waals gases, strong and weak interactions, and lattice gauge theories. In fact, any system that is consistent with special and general relativity evolves according to local interactions \cite{lloyd 1996}. In a $k$-local system there are $\binom{n}{k}$ possible subsets of $k$ qubits. Therefore the number of Pauli strings that appear in the decomposition of a $k$-local Hamiltonian is bounded by a polynomial. When Eq.~(\ref{BG:poly_pauli_sum}) is encoded into a const function as in Eq.~(\ref{BG:cost_function}) we find that
+Let us now address the question of how to evaluate the VQA cost function defined in Eq.~\ref{BG:cost_function}. Using Eq.~(\ref{BG:poly_sum}) and Theorem~\ref{BG:theorem_pauli_basis}, most interesting observables can be written as a linear combination of a polynomial number of Pauli strings with real coefficients, i.e.,
+\begin{equation}
+\label{BG:poly_pauli_sum}
+	\hat{O} = \sum_{i=1}^{\text{poly}(N)} c_i \sigma_i^\alpha
+\end{equation}
+where $\alpha = x, y, z$ identify the Pauli spin operator. For example, most physically motivates Hamiltonians are $k$-local. That is, each of the Pauli strings in the sum acts nontrivially on at most $k$ qubits. Examples of $k$-local systems include Ising and Heisenberg spin systems, van der Waals gases, strong and weak interactions, and lattice gauge theories. In fact, any system that is consistent with special and general relativity evolves according to local interactions \cite{lloyd 1996}. In a $k$-local system there are $\binom{n}{k}$ possible subsets of $k$ qubits. Therefore the number of Pauli strings that appear in the decomposition of a $k$-local Hamiltonian is bounded by a polynomial. When Eq.~(\ref{BG:poly_pauli_sum}) is encoded into a cost function as in Eq.~(\ref{BG:cost_function}) we find that 
+
 \begin{align}
 \label{BG:pauli_cost_function}
 	f_{\hat{O}}(\vec{\theta}) &= \expval*{\hat{O}}{\psi({\vec{\theta}})} \nonumber\\
 	&=\sum_{i=1}^{\text{poly}(N)} \expval*{ c_i \sigma_i^\alpha}{\psi({\vec{\theta}})} \nonumber\\
 	&=\sum_{i=1}^{\text{poly}(N)} c_i \expval*{ \sigma_i^\alpha}{\psi({\vec{\theta}})}.
 \end{align}
-From this we see that the evaluation of the cost function boils down to evaluating the expectation value of a weighted sum of Pauli strings assuming that the values of $c_i$ are known beforehand. Expectation value of a tensor product of an arbitrary number of Pauli operators can be estimated by measuring each of the qubit locally \cite{nielsen}. This is an operation that requires a coherence time of $O(1)$ (i.e. incurring a constant cost in time) under the assumption that parallel qubit rotations and readouts are possible \cite{peruzzo}. Subsection~\ref{BG:pauli_string_expectation} demonstrates how to find the expectation value of a Pauli string.
-\subsection{Measurement of Pauli strings} \label{BG:pauli_string_expectation}   
 
-
-
+From this we see that the evaluation of the cost function boils down to evaluating the expectation value of a weighted sum of Pauli strings assuming that the values of $c_i$ are known beforehand. Expectation value of a tensor product of an arbitrary number of Pauli operators can be estimated by measuring each of the qubit locally \cite{nielsen}. This is an operation that requires a coherence time of $O(1)$ (i.e. incurring a constant cost in time) under the assumption that parallel qubit rotations and readouts are possible \cite{peruzzo}.
 
 \subsection{Precision and Chebyshev's inequality}
-Suppose we wish to estimate  $E=\expval*{\mathcal{P}}{\psi({\vec{\theta}})}$, for some Pauli string $\mathcal{P}$, up to a precision $\varepsilon > 0$. In order to achieve that, let 
+Suppose we wish to estimate  $E=\expval*{P}{\psi({\vec{\theta}})}$, for some Pauli string $P\in \mathbb{P}^N$, up to a precision $\varepsilon > 0$. In order to achieve that, let 
 \begin{equation}
-	\mathcal{P} = \sum_{k=1}^{2^N} \lambda_k \dyad*{\phi_k}
+	P = \sum_{k=1}^{2^N} \lambda_k \dyad*{\phi_k}
 \end{equation}
-denote the spectral decomposition of $\mathcal{P}$. Here $E$ can be taken as the expected value of a random variable $X$ with possible outcomes $\{\lambda_i \}_{i=1}^{2^N}$ with
+denote the spectral decomposition of $P$. Here $E$ can be taken as the expected value of a random variable $X$ with possible outcomes $\{\lambda_i \}_{i=1}^{2^N}$ with
 \begin{equation}
-\mathbb{P}(X=\lambda_k)=\abs{\braket{\phi_k}{\psi(\vec{0})}}^2.
+p(X=\lambda_k)=\abs*{\braket*{\phi_k}{\psi(\vec{0})}}^2.
 \end{equation}
 That is, $X$ is the randvariable representing the outcome of measuring operator $\hat{O}$ on the state $\ket*{\psi(\vec{\theta})}$. \emph{Chebyshev's inequality} is a well known result in probability theory which states that if we take $M$ copies of $X$, denoted by $X_1, \ldots, X_M$, then
 \begin{equation}
 \label{BG:chebyshev}
-	\mathbb{P}\left( \abs{\dfrac{\sum_{i=1}^M X_i}{M}-E} \geq \varepsilon \right) \leq \dfrac{\sigma^2}{M\varepsilon^2},
+	p\left( \abs{\dfrac{\sum_{i=1}^M X_i}{M}-E} \geq \varepsilon \right) \leq \dfrac{\sigma^2}{M\varepsilon^2},
 \end{equation}
 where $\sigma$ denoted the variance of $X$. Since the variance of $X$ can be assumed to be bounded above by a constant, from Eq.~(\ref{BG:chebyshev}) it can be deduced that 
 \begin{equation}
@@ -327,7 +327,7 @@ The strategy presented here is a very naive way of estimating the cost function 
 
 \section{Optimization routine} \label{BG:optimization_routine}
 
-Optimization is the next critical aspect of VQAs. Nnumerical optimization is a vast field, and therefore identifying and adapting existing optimization techniques that are suited to quantum variational approaches requires considerable effort because success of a VQA depends on the reliability and efficiency of the classical optimization method used. The cost function is statistical by design. Unlike a typical optimization routine in classical computing, the inherently stochastic environment due to the limited number of measurements, hardware noise, and the presence of barren plateaus makes the choice of an optimizer difficult. This has lead to active research in the development of quantum-aware optimizers. 
+When choosing the variational ansatz, the hope is that it explores a region of Hilbert space in which the minimum $\min_{\vec{\theta}}f_{\hat{O}}(\vec{\theta})$ is near the actual ground state energy of $\hat{O}$. Thus, after making the ansatz choice, the challenge that remains is to find the $\vec{\theta}$ that minimizes the cost function $f_{\hat{O}}$. To this end, a classical optimization routine is employed. Numerical optimization is a vast field, and therefore identifying and adapting existing optimization techniques that are suited to quantum variational approaches requires considerable effort because success of a VQA depends on the reliability and efficiency of the classical optimization method used. 
 
 The following should be kept in mind when choosing an optimizer.
 \begin{enumerate}
@@ -335,17 +335,39 @@ The following should be kept in mind when choosing an optimizer.
 	\item The optimizer should be resilient to noisy data and precision on objective function evaluation that is limited by the number of shots in the measurement.
 	\item Objective function evaluations take a long time, which means shots frugal optimizers are favored.
 \end{enumerate}
+Which classical optimization routine works best with VQAs is an open question. Broadly speaking, the optimization algorithms used in VQAs can be split into two groups: 
+\begin{enumerate}
+    \item \emph{Gradient-based approaches:} As the name suggests, gradient-based methods optimize the cost function $f_{\hat{O}}(\vec{\theta})$ via its gradient $\nabla_{\vec{\theta}}f_{\hat{O}}(\vec{\theta})$. The calculated gradient will indicate the direction in which the cost function shows the greatest change. By going in the opposite direction to that, one can find the (local) minima.
+    \newline  
+    \textbf{Advantages:}
+    \begin{itemize}
+        \item Convergence properties are well established in research.
+        \item When the cost function landscape is simple and smooth, it works incredibly well.
+    \end{itemize}
+    \textbf{Disadvantages:}
+    \begin{itemize}
+        \item Time taken for convergence is large when the gradient evaluation is expensive.
+        \item Unreliable under noisy gradient evaluations.
+        \item Suffers in the presence of exploding or vanishing gradients.
+    \end{itemize}
+    Weighing the pros and cons, gradient-based optimizers are a good choice when there is previous knowledge of the cost landscape and it is known to be smooth to ensure efficient gradient evaluations.
+    \item \emph{Gradient-free approaches:} Gradient-free methods rely on evaluating the function on many points in the cost landscape and inferring a minimum from these evaluations.
+    \newline  
+    \textbf{Advantages:}
+    \begin{itemize}
+        \item Works good for complicated energy landscapes that aren't smooth as they don't require the ability to evaluate gradients efficiently.
+        \item Works decently even in the presence of vanishing and exploding gradients.
+    \end{itemize}
+    \textbf{Disadvantages:}
+    \begin{itemize}
+        \item Requires several cost function evaluations in general.
+        \item Doesn't converge as fast as gradient-based approaches in smooth cost landscapes.
+    \end{itemize}
+    Gradient-free approaches are suitable when evaluating the gradient is very expensive and when there is know prior knowledge about the cost landscape.
+\end{enumerate}
 
-Given below is a small selection of optimizers used commonly or promoted for VQAs.
-
-\subsection{Gradient based methods}
-
-\subsection{Gradient free approaches}
-
-\subsubsection{Barren plateaus}
-
-\subsubsection{Effect of noise}
-
+\subsubsection{Effect of hardware noise}
+As a final remark, it is important to mention that VQAs have been shown to be somewhat resilient to noise. This is due to the ability counteract errors in the evaluation by varying the parameter. That is, if an error slightly moves the target minimum, it is still possible to find it by changing the parameters accordingly as explained under Section~\ref{BG:the_variational_paradigm_and_general_quantum_systems}. The cost function is statistical by design. Unlike a typical optimization routine in classical computing, the inherently stochastic environment due to the limited number of measurements, hardware noise, and the presence of barren plateaus (i.e. exponentially vanishing gradients) makes the choice of a suitable classical optimizer difficult. This has lead to active research in the development of quantum-aware optimizers which are believed to deal best with the quantum noise in expectation value evaluations.
 
 \section{Applications}
 
@@ -358,7 +380,7 @@ Given below is a small selection of optimizers used commonly or promoted for VQA
 	\item calculating the cost function example at bond length
 	\item comparing two different variational forms
 	\item different optimizers and effect of noise
-	\item qubi reduction and symmetries 
+	\item qubit reduction and symmetries 
 \end{itemize}
 
 {
@@ -396,8 +418,7 @@ to obtain even more powerful approaches. A concrete example of this can is VQE. 
 
 Finally, we point out that the success of variational approaches ultimately depends on the quality of the quantum devices and the quantum operations they implement. Therefore, maximizing the utility of quantum devices, in particular, early machines, is another way to push quantum computing towards the practical frontier. These improvements can be introduced at the software level by finding more efficient protocols to implement quantum operations common to many algorithms.
 
-The work presented here is only a part of the continuously growing body of research in
-variational algorithms\cite{ Quantum Computing: Progress and Prospects. The
+The work presented here is only a part of the continuously growing body of research in variational algorithms\cite{ Quantum Computing: Progress and Prospects. The
 	National Academies Press, Washington, DC, 2018.}. The history of this field has just started, and many exciting developments await for us.
  }
 
