@@ -54,7 +54,11 @@ As quantum devices became available, it was evident that progress in both the al
 the hardware side was going to require the realization of proof-of-principle implementations of
 quantum algorithms. The modest resource requirements and flexibility of VQE compared to other
 algorithms, positioned this approach as one of the first milestones in the pipeline of quantum
-computing experiments.} \\
+computing experiments.
+
+The reader is encouraged to go through Chapter 4 and work through all the exercises in Ref.~\cite{nielsen} to better understand ansatz construction and the measurement scheme.
+
+} \\
 Experimental advancements in quantum computation can be measured with different figures of merit. One main requirement is that the number of available physical qubits must exceed a specific threshold to explore classically intractable problems. 
 At the moment of writing this document, the largest  circuit model quantum processors reported comprise of just 10-100 qubits with error rates of $10^{-3} - 10^{-2}$. This is called the Noisy Intermediate Scale Quantum (NISQ) era, a term first coined by John Preskill in 2018 \cite{}. NISQ devices are characterized by the limited coherence times, lower gate fidelities and fewer qubits. Therefore, NISQ devices will not have adequate resources to implement quantum error correction and as a consequence only shallow circuits can be executed. However, these machines will be large enough to implement quantum dynamics that cannot be efficiently simulated with existing classical computers because classical computers are notoriously bad at simulating dynamics of highly entangled many-particle quantum systems \footnote{Even just storing arbitrary quantum states in classical computers is difficult, because the amount of classical resources required to represent a given quantum state is related to the degree of entanglement of the state. This problem just gets worse when studying the dynamics. Check Exercise 4.46 in Ref.~\cite{nielsen}.}.
 
@@ -143,19 +147,72 @@ The fact that this principle still holds for mixed states is the main reason for
 
 Variational quantum circuit or the ansatz construction is a cruicial aspect of VQA that dictates the success of the algorithm. It is a very active field of research and in most cases finding an optimal ansatz for a problem is difficult than finding a solution to the computational problem itself. The variational ansatz is like a stencil of a given VQA where the parameters are like the prints and holes in it. They are continuously varied to prepare a lot of different trial states. One can make this parametrization classical - i.e, given a list of paramters $\vec{\theta} \in \mathbb{R}^{N_{params}}$, we can prepare a different trial state $\ket*{\Psi{\vec{\theta}}}$ for each $\vec{\theta}$. One might ask whether the classical parametrization makes the calculation of $\expval*{\hat{O}}$ classically tractable, but this is avoided by using gate angles as parameters to control the quantum circuit. With this key idea in mind, now we are ready to define a variational ansatz formally according to \cite{herasymenko2019}. 
 \begin{definition}
-	A \textbf{variational ansatz} on $n_p$ parameters corresponds to a pair $(U, \vec{\ket{0}})$, where $U$ is smooth map from the \textit{parameter space} $\vec{\theta} \in \mathbb{R}^{n_p}$ to the unitary operator $U(\vec{\theta})$ on $\mathbb{C}^{2^N}$, and $\vec{\ket{0}} \in \mathbb{C}^{2^N}$ is the \textit{initial state}, which is acted on to generate the \textit{variational state} $\ket*{\psi(\vec{\theta})} = U(\vec{\theta}) \vec{\ket{0}}$, with variational energy $E(\vec{\theta}) = \expval*{H}{\psi({\vec{\theta}})}$ 
+	A \textbf{variational ansatz} on $n_p$ parameters corresponds to a pair $(U, \vec{\ket{0}})$, where $U$ is smooth map from the \textit{parameter space} $\vec{\theta} \in \mathbb{R}^{n_p}$ to the unitary operator $U(\vec{\theta})$ on $\mathbb{C}^{2^N}$, and $\vec{\ket{0}} \in \mathbb{C}^{2^N}$ is the \textit{initial state}, which is acted on to generate the \textit{variational state} $\ket*{\psi(\vec{\theta})} = U(\vec{\theta}) \vec{\ket{0}}$, with variational energy $E(\vec{\theta}) = \expval*{H}{\psi({\vec{\theta}})}$. 
 \end{definition}
 
-Assuming that the vectors $\vec{\theta}$ are continuously defined, a variational ansatz can be imagined to sweep out a (possibly open) manifold in the Hilbert space of the states. In simpler terms, it explores some smooth space that lies within the set of allowed Hilbert space. With the exception of possible boundaries, the dimension of this manifold is precisely $N_{params}$. This points out a limit of the variational paradigm; to explore the entire $2^N$-dimensional Hilbert space and guarantee that the ground state is found, $O(2^N)$ parameters \cite{herasymenko2019} and a similar scaling of time are required \footnote{This doesn't come off as a surprise, because performing such a task is known to be QMA-hard problem\cite{QMA complete problems}.}. So an exponential advantage is not expected. Instead, the 'art' of a VQA design is in choosing a manifold that contains points \emph{sufficiently close} to the true ground state, and the 'art' of application design is in choosing a problem such that 'sufficiently close' is achievable.  
+Assuming that the vectors $\vec{\theta}$ are continuously defined, a variational ansatz can be imagined to sweep out a (possibly open) manifold in the Hilbert space of the states. In simpler terms, it explores some smooth space that lies within the set of allowed Hilbert space. With the exception of possible boundaries, the dimension of this manifold is precisely $N_{params}$. This points out a limit of the variational paradigm; to explore the entire $2^N$-dimensional Hilbert space and guarantee that the ground state is found, $O(2^N)$ parameters \cite{herasymenko2019} and a similar scaling of time are required \footnote{This doesn't come off as a surprise, because performing such a task is known to be a QMA-hard problem\cite{QMA complete problems}.}. So an exponential advantage is not expected. Instead, the 'art' of a VQA design is in choosing a manifold that contains points \emph{sufficiently close} to the true ground state, and the 'art' of application design is in choosing a problem such that 'sufficiently close' is achievable.  
 
-With the limitations in mind, the variational circuit must be chosen carefully. because the choice of ansatz greatly affects the performance of a VQA. From the perspective of the problem, the ansatz influences both the closeness to the final solution and the convergence speed. Moreover, given the exponentially small fraction of the Hilbert space that will be explored, randomly generated ansatz cannot be expected to be 'good enough' due to the difficulties faced when optimizing such an arbitrary ansatz. Other than the computational concerns, NISQ hardware has to be taken into account as well. Due to the short coherence times of NISQ devices, deeper circuits are more susceptible to errors, and some gates can be costly to compose with hardware native gates. Accordingly, most of the ansätze developed to date are categorized either as more problem-inspired or more hardware efficient, depending on their structure and application. In the following subsections, common constructions of both the types are presented.
+With the limitations in mind, the variational circuit must be chosen carefully. Because the choice of ansatz greatly affects the performance of a VQA. From the perspective of the problem, the ansatz influences both the closeness to the final solution and the convergence speed. Moreover, given the exponentially small fraction of the Hilbert space that will be explored, randomly generated ansatz cannot be expected to be 'good enough' due to the difficulties faced when optimizing such an arbitrary ansatz. Other than the computational concerns, NISQ hardware has to be taken into account as well. Due to the short coherence times of NISQ devices, deeper circuits are more susceptible to errors, and some gates can be costly to compose with hardware native gates. Accordingly, most of the ansätze developed to date are categorized either as more problem-inspired or more hardware efficient, depending on their structure and application. In the following subsections, a short explanation of arbitrary unitary evolution $U(\theta)$ and common constructions of both the ansatz types are presented.
+\subsection{Arbitrary unitary evolution} \label{BG:arbitrary_unitary}
+Understanding how arbitrary unitary evolutions $U(\theta)$ are executed in a quantum circuit is crucial for efficient ansatz construction. An arbitrary unitary evolution can be generated by an Hermitian operator $\hat{g}$ which defines an evolution in terms of the parameter $\theta$,
+\begin{equation}
+\label{BG:evolution_generator}
+	U(\theta)= e^{-i\hat{g}\theta}.
+\end{equation}
+From an abstract view point, these evolutions can always be described as time evolution of the corresponding quantum state, so that the generator $\hat{g}$ is often just the Hamiltonian $\hat{H}$\footnote{Note however, that the Hamiltonian generating evolution does not necessarily need to be the operator that describes the energy of the system if interest.}. Since any $\hat{H}$ can be written as a sum of Pauli strings according to Eq.~(\ref{BG:poly_sum}) it is useful to analyse the case when $\hat{g}$ is a Pauli operator $\hat{P} \in \mathbb{P^N}$. This makes
+\begin{equation}
+\label{BG:pauli_generator}
+    U_{\hat{P}}(\theta) = e^{-i \hat{P} \theta}.
+\end{equation}
+Taylor expanding Eq.~(\ref{BG:pauli_generator}) and using the properties of the Pauli operators (see Appendix~\ref{BG:pauli_basis}) yields,
+\begin{align}
+    U_{\hat{P}}(\theta) &= \sum_k \frac{(-i\theta \hat{P})^{k}}{k!} \nonumber \\
+    &=  \sum_k \frac{(-i\theta \hat{P})^{2k}}{2k!}+\frac{(-i\theta \hat{P})^{2k+1}}{(2k+1)!} \nonumber \\
+    &= \sum_k (-i)^{2k} \frac{\theta^{2k}}{2k!}P_i^{2k}+ (-i)^{2k+1}\frac{\theta^{2k+1}}{(2k+1)!}P_i^{2k+1} \nonumber \\
+    &=\sum_k (-1)^k \frac{\theta^{2k}}{2k!} I + (-i)\frac{\theta^{2k+1}}{(2k+1)!}P_i.
+\end{align}
+The terms are just the Taylor expansions of $\sin$ and $\cos$ and thus, $U(t)$ becomes a single-qubit rotation given by
+\begin{equation}
+    U_{\hat{P}}(\theta)=\cos{\theta}I-i\sin{\theta}\hat{P}.
+\end{equation}
+It is important to note that although $\hat{P}$ when acting as a unitary operator by itself does not generate any entanglement between the qubits, $U_{\hat{P}}(\theta)$ is an entangling gate! Not surprisingly, every possible operation on a quantum computer may be approximated by a series of $U_{\hat{P}}(\theta)$ for different operators $P_i$.
+
+\subsubsection{Suzuki-Trotter expansion}
+The Suzuki-Trotter expansion\cite{suzuki1976} is a general method to approximate a general, difficult to implement unitaries in the form of eq.~(\ref{BG:arbitrary_unitary}) as a function of the $\theta$ parameter. This is done by decomposing the generator $\hat{g}$ into a sum of non-commuting operators $\{\hat{o}_k \}$ such that
+\begin{equation}
+    \hat{g}=\sum_k a_k \hat{o_k},
+\end{equation}
+for some coefficients $a_k$. The operators $\hat{o}_k$ are chosen such that the evolution $e^{-i\hat{o}_k \theta}$ is easy to implement. An example of this is the expansion of the Hamiltonian $\hat{H}$ by Pauli strings as shown previously. 
+The full evolution over $\theta$ can now be decomposed into $m\in \mathbb{Z}^+$  smaller, equally sized chunks
+\begin{equation}
+\label{BG:trotterization}
+    e^{-i\hat{g}\theta} = \lim_{m \rightarrow \infty} \left( \prod_k e^{-i\frac{a_k \hat{o_k}}{m}\theta}\right)^m.
+\end{equation}
+When Pauli strings are used as in Eq.~(\ref{BG:pauli_generator}), this becomes a multi qubit rotations which themselves can be decomposed into primitive one and two qubit gates. 
+
+
+
 
 \subsection{Problem-inspired ansatz construction}
-An arbitrary unitary evolution can be generated by an Hermitian operator $\hat{g}$ which defines an evolution in terms of the parameter $t$,
-\begin{equation}
-	G(t)= e^{-i\hat{g}t}.
-\end{equation}
-As an example, $\hat{g}$ can be a Pauli operator and thus, $G(t)$ becomes a single-qubit rotation.
+Historically, problem-inspired ansatz were the first to be proposed and implemented on actual hardware. Unitary Coupled Cluster (UCC) ansatz \cite{taube and bartlett 2006}, Variational Hamiltonian Ansatz (VHA) \cite{mcclean2016, wecker2015}, factorized UCC and adaptive apparoaches are a few such problem inspired variational ansatz that stem from quantum chemistry and many-body physics. 
+Within so-called problem-inspired approaches, unitary evolution is in the form of Eq.~(\ref{BG:arbitrary_unitary}), with generators $\hat{g}$ derived from the system properties. Knowledge about the physics behind the problem Hamiltonian being trotterized can reduce substantially the number of gates needed to implementing the Suzuki-Trotter method. Let us now look at a couple of problem inspired ansatz examples.
+
+
+
+
+\subsubsection{Example 1 : The Unitary Coupled Cluster Ansatz}
+The UCC ansatz is widely used in quantum chemistry problems where the goal is to simulate a fermionic molecular Hamiltonian and obtain the ground state energy. The idea of implementing UCC on quantum computer arose from the observation that the UCC ansatz, which adds quantum correlations to the Hartree-Fock approximation, is inefficient to represent on a classical device \cite{yung2014 nisq review}. It was first realized on a photonic processor by Peruzzo and his group in 2014 \cite{peruzzo2014}. 
+
+To implement this ansatz on a quantum computer, second quantization methods are used to map the fermionic operators to the qubit operators\footnote{There are many variants of the UCC ansatz, with some of them reducing the depth of the quantum circuit by considering more efficient methods for compiling the fermionic operators using group theory.} resulting in an ansatz of the form Eq.~(\ref{BG:trotterization}). 
+
+
+\subsubsection{Example 2 : The Quantum Alternating Operator Ansatz}
+
+
+
+
+
+
 
 
 
@@ -206,7 +263,7 @@ Even though the properties given above sound trivial, they are difficult to sati
 
 
 \section{Measurement scheme}
-Let us now adress the question of how to evaluate the VQA cost function defined in Eq.~{\ref{BG:cost_function}. Using Eq.~(\ref{BG:poly_sum}) and Theorem~\ref{BG:theorem_pauli_basis}, most interesting observables can be written as a linear combination of a polynomial number of Pauli strings with real coefficients, i.e.,
+Let us now address the question of how to evaluate the VQA cost function defined in Eq.~{\ref{BG:cost_function}. Using Eq.~(\ref{BG:poly_sum}) and Theorem~\ref{BG:theorem_pauli_basis}, most interesting observables can be written as a linear combination of a polynomial number of Pauli strings with real coefficients, i.e.,
 	\begin{equation}
 	\label{BG:poly_pauli_sum}
 		\hat{O} = \sum_{i=1}^{\text{poly}(N)} c_i \sigma_i^\alpha
@@ -460,7 +517,6 @@ Some useful properties of $\mathbb{P}^N$:
 	\item To generalize, one can form a $[N, k]$ \textbf{stabilizer group} $\mathcal{S}$, generated by $k$ commuting, Hermitian, non-generating elements of $\mathbb{P}^N$ (up to a complex phase); this diagonalizes $\mathbb{C}^{2^k}$ into $2^k$ unique eigensectors of dimension $2^{N-k}$. When $N=k$, these sectors contain single eigenstates, which are called \textbf{stabilizer states}.
 	\item Given such a stabilizer state $\ket{\psi}$ and Hermitian $P \in \mathbb{P}^N$, either $P \ket{\psi}=\pm \ket{\psi}$ or $\expval{P}{\psi}=0$.
 \end{itemize}
-
 
 
 
