@@ -80,7 +80,7 @@ In practice, VQAs are carried out following an iterative procedure on a Quantum 
 	\item \emph{An \textbf{initial state} preparation:} we start by preparing the initial input state $\ket{\varphi}$;
 	\item \emph{Application of a \textbf{parametrized unitary}:} a parameterized unitary $\hat{U}(\vec{\theta})$ is applied to the input state on the QPU preparing the output state $\hat{U}(\vec{\theta})\ket{\varphi}$. This parameterized unitary is defined by the choice of variational ansatz. It should correspond to a quantum circuit that cannot be efficiently computed using classical resources \footnote{One should remember that certain sets of quantum gates such as the Clifford group gates, compose quantum circuits that can be efficiently simulated (i.e in polynomial time) with classical resources according to the Gottesman-Knill theorem};
 	\item \emph{A \textbf{cost function} and a method to estimate/evaluate it:} the value of the function is estimated using a quantum circuit. Ultimately, the estimation procedure reduces to performing measurements on the output state. To estimate the function to a given accuracy, Step 1 has to be repeated several times to prepare trial states to collect sufficient measurement statistics;
-	\item \emph{A feedback loop with \textbf{Classical optimization routine}:} based on the function estimate from Step 3. A classical optimization technique proposes a new set of values for the optimal variational parameters $\vec{\theta}'$. 
+	\item \emph{A feedback loop with \textbf{classical optimization routine}:} based on the function estimate from Step 3. A classical optimization technique proposes a new set of values for the optimal variational parameters $\vec{\theta}'$. 
 \end{enumerate}
 
 Steps 1-4 are repeated until some problem-specific convergence criteria are satisfied. The following sections will deal with each of the components in-depth and a summarized diagram of the full protocol is shown in Fig.~\ref{BG:vqa_loop}.   
@@ -256,7 +256,7 @@ Even though the properties given above sound trivial, they are difficult to sati
 
 
 \section{Measurement scheme}
-Let us now address the question of how to evaluate the VQA cost function defined in Eq.~\ref{BG:cost_function}. Using Eq.~(\ref{BG:poly_sum}) and Theorem~\ref{BG:theorem_pauli_basis}, most interesting observables can be written as a linear combination of a polynomial number of Pauli strings with real coefficients, i.e.,
+Let us now address the question of how to evaluate the VQA cost function defined in Eq.~(\ref{BG:cost_function}). Using Eq.~(\ref{BG:poly_sum}) and Theorem~\ref{BG:theorem_pauli_basis}, most interesting observables can be written as a linear combination of a polynomial number of Pauli strings with real coefficients, i.e.,
 \begin{equation}
 \label{BG:poly_pauli_sum}
 	\hat{O} = \sum_{i=1}^{\text{poly}(N)} c_i \sigma_i^\alpha
@@ -395,15 +395,8 @@ VQE consists of three different nested iterations.
 %
 \section{Outlook and conclusions}
 Will NISQ devices running VQAs be able to outperform classical algorithms that find approximate solutions to the same computational problems? Nobody knows \emph{yet}, but there is hope. Even if the early generation NISQ devices are incapable of competing with classical methods that were honed over decades of research, experimental results encourage that VQAs can soon surpass classical methods, and so spur further scientific advancements.
-
-{\color{red} rewrite: 
-Given that variational algorithms are heuristic and provide approximate solutions, one might wonder whether there will be value in these approaches once error-correction becomes available, especially compared to quantum algorithms with a proven advantage on the same tasks. The first thing to consider is that designing algorithms with proven advantage is challenging and so far only a relatively small number of such algorithms have been discovered. Therefore, for many applications, it is possible that variational algorithms will be the only quantum algorithms available in the error-correction era. A second consideration is that variational algorithms are designed to optimize the use of quantum resources, and therefore it is likely that their error-corrected implementations are more efficient than implementations of their counterparts with proven advantage.  Consequently, quantum algorithms might be still competitive with traditional algorithms regarding computational cost. Furthermore, since formal demonstrations of advantage are based on asymptotic considerations, there is a chance for variational algorithms to be more efficient and sufficiently accurate for specific instances of a problem. Finally, the third consideration is that variational algorithms can be combined with traditional quantum algorithms
-to obtain even more powerful approaches. A concrete example of this can is VQE. Techniques employed for simulating quantum systems with provable speed-up, such as quantum phase estimation, require the preparation of states with sufficient overlap with the eigenstates of the Hamiltonian to measure eigenvalues with high probability. Using VQE, it will be possible to prepare such states, ultimately boosting the success probability of phase estimation. \\
-
-Finally, we point out that the success of variational approaches ultimately depends on the quality of the quantum devices and the quantum operations they implement. Therefore, maximizing the utility of quantum devices, in particular, early machines, is another way to push quantum computing towards the practical frontier. These improvements can be introduced at the software level by finding more efficient protocols to implement quantum operations common to many algorithms.
-
-The work presented here is only a part of the continuously growing body of research in variational algorithms\cite{ NationalAcademiesofSciencesEngineering2019}. The history of this field has just started, and many exciting developments await for us.
- }
+Given that variational algorithms are heuristic and provide only approximate solutions, one might wonder whether there will be value in these strategies once error-correction becomes possible, especially compared to quantum algorithms with a proven advantage on the same tasks. The first thing to acknowledge is that composing algorithms with proven advantage is challenging, and so far only a relatively small number of such algorithms have been discovered. Therefore, for many applications, variational algorithms may be the only quantum algorithms available, even in the error-correction era. A second consideration is that variational algorithms are intended to optimize the use of quantum resources, and therefore it is likely that their error-corrected implementations are more efficient than implementations of their counterparts with proven advantage.  Consequently, quantum algorithms might be still rival traditional algorithms regarding computational cost. Furthermore, since formal demonstrations of quantum advantage are based on asymptotic considerations, there is a chance for variational algorithms to be more efficient and adequately accurate for particular instances of a problem. Finally, the third consideration is that variational algorithms can be joined with traditional quantum algorithms
+to obtain even more powerful approaches. A concrete example of this is QPE and VQE. Procedures employed for simulating quantum systems with provable speed-up, such as QPE, require the preparation of states with sufficient overlap with the eigenstates of the Hamiltonian to measure eigenvalues with high probability. Using VQE, it will be possible to prepare such states, ultimately boosting the success probability of phase estimation. Finally, it must be pointed out that the success of variational methods ultimately depends on the quality of the quantum devices and the quantum operations they implement. Therefore, maximizing the utility of quantum devices, in particular, early NISQ devices, is another way to push quantum computing towards the practical frontier. These improvements can be introduced at the software level by finding more efficient protocols to implement quantum operations common to many algorithms. The work presented here is only a part of the continuously growing body of research in variational algorithms\cite{NationalAcademiesofSciencesEngineering2019}. The history of this field has just started, and many exciting developments await for us.
 
 % START APPENDIX
 %
@@ -528,17 +521,6 @@ Some useful properties of $\mathbb{P}^N$:
 	\item Given such a stabilizer state $\ket{\psi}$ and Hermitian $P \in \mathbb{P}^N$, either $P \ket{\psi}=\pm \ket{\psi}$ or $\expval{P}{\psi}=0$.
 \end{itemize}
 
-
-
-
-
-
-
-\section{Minimizing the VQE cost function}
-\subsection{Gradient estimation}
-\subsubsection{Parameter shift rule}
-\subsubsection{Stochastic finite difference approximation}
-
 \end{appendix}
 %
 % END APPENDIX
@@ -548,5 +530,4 @@ Some useful properties of $\mathbb{P}^N$:
 %
 
 \bibliography{seminarbib}
-
 \end{document}
