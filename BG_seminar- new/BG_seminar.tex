@@ -8,12 +8,15 @@
 \usepackage{multirow}
 \usepackage{tabularx}
 \usepackage{tikz}
+\usepackage{minted}
 \usetikzlibrary{quantikz}
 
-%\theoremstyle{theorem}
+
+
+
+%to add definitions and theorems
 \newtheorem{definition}{Definition}[section]
 \newtheorem{theorem}{Theorem}[section]
-%\theoremstyle{remark}
 \newtheorem*{remark}{Remark}
 
 % 
@@ -58,9 +61,7 @@ quantum algorithms. The modest resource requirements and flexibility of VQE comp
 algorithms, positioned this approach as one of the first milestones in the pipeline of quantum
 computing experiments.
 
-The reader is encouraged to go through Chapter 4 and work through all the exercises in Ref.~\cite{nielsen} to better understand ansatz construction and the measurement scheme.
-
-} \\
+The reader is encouraged to go through Chapter 4 and work through all the exercises in Ref.~\cite{nielsen} to better understand ansatz construction and the measurement scheme.}
 Experimental advancements in quantum computation can be measured with different figures of merit. One main requirement is that the number of available physical qubits must exceed a specific threshold to explore classically intractable problems. 
 At the moment of writing this document, the largest  circuit model quantum processors reported comprise of just 10-100 qubits with error rates of $10^{-3} - 10^{-2}$. This is called the Noisy Intermediate Scale Quantum (NISQ) era, a term first coined by John Preskill in 2018 \cite{}. NISQ devices are characterized by the limited coherence times, lower gate fidelities and fewer qubits. Therefore, NISQ devices will not have adequate resources to implement quantum error correction and as a consequence only shallow circuits can be executed. However, these machines will be large enough to implement quantum dynamics that cannot be efficiently simulated with existing classical computers because classical computers are notoriously bad at simulating dynamics of highly entangled many-particle quantum systems \footnote{Even just storing arbitrary quantum states in classical computers is difficult, because the amount of classical resources required to represent a given quantum state is related to the degree of entanglement of the state. This problem just gets worse when studying the dynamics. Check Exercise 4.46 in Ref.~\cite{nielsen}.}.
 
@@ -369,10 +370,9 @@ Which classical optimization routine works best with VQAs is an open question. B
 \subsubsection{Effect of hardware noise}
 As a final remark, it is important to mention that VQAs have been shown to be somewhat resilient to noise. This is due to the ability counteract errors in the evaluation by varying the parameter. That is, if an error slightly moves the target minimum, it is still possible to find it by changing the parameters accordingly as explained under Section~\ref{BG:the_variational_paradigm_and_general_quantum_systems}. The cost function is statistical by design. Unlike a typical optimization routine in classical computing, the inherently stochastic environment due to the limited number of measurements, hardware noise, and the presence of barren plateaus (i.e. exponentially vanishing gradients) makes the choice of a suitable classical optimizer difficult. This has lead to active research in the development of quantum-aware optimizers which are believed to deal best with the quantum noise in expectation value evaluations.
 
-\section{Applications}
-
-\section{Hands-on tutorial: Simulating $H_2$ molecule using VQE}
+\section{Hands-on tutorial: Simulating $\text{H}_2$ molecule using VQE}
 \label{BG:hands_on}
+With the knowledge of VQAs gained from the previous section we are now well equipped to try out a popular hybrid algorithm VQE to simulate the Hydrogen molecule using Qiskit. Let us start be getting into the specific details of the variational quantum eigensolver.
 \begin{itemize}
 	\item short outline of VQE
 	\item flow chart of the algorithm
@@ -393,19 +393,6 @@ VQE consists of three different nested iterations.
 	
 \end{enumerate}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 %
