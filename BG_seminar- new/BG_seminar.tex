@@ -8,11 +8,43 @@
 \usepackage{multirow}
 \usepackage{tabularx}
 \usepackage{tikz}
-%\usetikzlibrary{quantikz}
+\usetikzlibrary{quantikz}
+\usepackage{pgfplots}
+\DeclareUnicodeCharacter{2212}{−}
+\usepgfplotslibrary{groupplots,dateplot}
+\usetikzlibrary{patterns,shapes.arrows}
+\pgfplotsset{compat=newest}
 
 \newtheorem{definition}{Definition}[section]
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem*{remark}{Remark}
+
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.94,0.97,1.00}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    keepspaces=true,                 
+    numbers=left, 
+    firstnumber=last,
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
 
 % 
 % you can add packages if they are compatible with the following packages that are loaded by 
@@ -56,10 +88,10 @@ One important aspect that marks experimental advancements in quantum computing i
 
 The very first VQA; the Variational Quantum Eigensolver (VQE) \cite{peruzzo2014} and the Quantum Approximate Optimization Algorithm (QAOA) \cite{farhi2014} paved the way for a new paradigm in quantum algorithm design, by considering the limitations of NISQ devices. Before these proposals, quantum algorithmic development was aimed at fault-tolerant quantum computers with error corrections capabilities. In contrast, VQAs seek to remove the stringent requirements for coherent evolution by formulating the computation as an approximate optimization problem. Here, a functional\footnote{A functional is simply a mapping that takes a function as input and returns a scalar as output.} in the space of heuristic functions defined by a variational quantum circuit is optimized. From this perspective variational quantum information processing and VQAs concern a strategy for finding extremums of \emph{quantum functionals}, which are defined as mappings from the state space of a quantum system onto a scalar \cite{fontalvo2019}. The flexibility in the definition of these heuristics allows the expansion of operability of these approaches within the NISQ regime, circumventing the need for quantum error correction.
 
-The purpose of this chapter is to give a short introduction to the art of variational quantum algorithms. This chapter is brief but self-contained and only a solid knowledge of quantum mechanics is assumed. The reader is encouraged to go through the theory and preferably work through the exercises in Chapter 4 of Ref.~\cite{nielsen2011} beforehand to better understand the implementation of VQAs on actual quantum devices. Basic familiarity with Hartree-Fock theory might prove useful in understanding the hands-on example but it is not a requirement and the reader would nevertheless get an overview of how to implement a VQA to solve the electronic structure problem and find the ground state energy of $H_2$ using Qiskit \cite{Qiskit}.
+The purpose of this chapter is to give a short introduction to the art of variational quantum algorithms. This chapter is brief but self-contained and only a solid knowledge of quantum mechanics is assumed. The reader is encouraged to go through the theory and preferably work through the exercises in Chapter 4 of Ref.~\cite{nielsen2011} beforehand to better understand the implementation of VQAs on actual quantum devices. 
+The chapter begins with a conceptual introduction to VQAs highlighting the motivation behind the use of variational methods on NISQ devices under Section \ref{BG:variational_quantum_algorithms}. The subsequent Sections \ref{BG:variational_ansatz},\ref{BG:section_cost_function}, \ref{BG:measurement_scheme} and \ref{BG:optimization_routine} delve deeper into concepts introduced in \ref{BG:variational_quantum_algorithms}. Finally a hands-on example is given under Section \ref{BG:hands_on} where a detailed analysis is performed on the application of the variational quantum eigensolver to find the ground state energy of $H_2$ molecule using Qiskit \cite{Qiskit}.
+Basic familiarity with Hartree-Fock theory might prove useful in understanding the hands-on example but it is not a requirement. At the end of this chapter, the reader will feel comfortable with the use of VQAs to solve common optimization problems and have a clear overview of the theory to adjust various parts of the algorithm to suit one's needs.
 
-
-{\color{red} which sections deal with what, which examples are given}
 
 %
 
@@ -78,7 +110,7 @@ These elements are combined to create a general strategy that can be applied to 
 In practice, VQAs are carried out following an iterative procedure on a Quantum Processing Unit (QPU) with continuous feedback to and from a classical central processing unit (CPU)\footnote{This is similar to the Graphical Processing Unit (GPU) and the CPU working together in a normal computer. In this case, the QPU plays the role of a GPU.}. A VQA consists of several modular components split between the QPU and CPU and can be readily connected, extended, and enhanced individually with developments in algorithms and quantum hardware. A full protocol consists of:
 \begin{enumerate}
 	\item \emph{An \textbf{initial state} preparation:} we start by preparing the initial input state $\ket{\varphi}$;
-	\item \emph{Application of a \textbf{parametrized unitary}:} a parameterized unitary $\hat{U}(\vec{\theta})$ is applied to the input state on the QPU preparing the output state $\hat{U}(\vec{\theta})\ket{\varphi}$. This parameterized unitary is defined by the choice of variational ansatz. It should correspond to a quantum circuit that cannot be efficiently computed using classical resources \footnote{One should remember that certain sets of quantum gates such as the Clifford group gates, compose quantum circuits that can be efficiently simulated (i.e in polynomial time) with classical resources according to the Gottesman-Knill theorem};
+	\item \emph{Application of a \textbf{parameterized unitary}:} a parameterized unitary $\hat{U}(\vec{\theta})$ is applied to the input state on the QPU preparing the output state $\hat{U}(\vec{\theta})\ket{\varphi}$. This parameterized unitary is defined by the choice of variational ansatz. It should correspond to a quantum circuit that cannot be efficiently computed using classical resources \footnote{One should remember that certain sets of quantum gates such as the Clifford group gates, compose quantum circuits that can be efficiently simulated (i.e in polynomial time) with classical resources according to the Gottesman-Knill theorem};
 	\item \emph{A \textbf{cost function} and a method to estimate/evaluate it:} the value of the function is estimated using a quantum circuit. Ultimately, the estimation procedure reduces to performing measurements on the output state. To estimate the function to a given accuracy, Step 1 has to be repeated several times to prepare trial states to collect sufficient measurement statistics;
 	\item \emph{A feedback loop with \textbf{classical optimization routine}:} based on the function estimate from Step 3. A classical optimization technique proposes a new set of values for the optimal variational parameters $\vec{\theta}'$. 
 \end{enumerate}
@@ -86,7 +118,12 @@ In practice, VQAs are carried out following an iterative procedure on a Quantum 
 Steps 1-4 are repeated until some problem-specific convergence criteria are satisfied. The following sections will deal with each of the components in-depth and a summarized diagram of the full protocol is shown in Fig.~\ref{BG:vqa_loop}.   
 
 
-
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{BG_vqa_loop.pdf}
+\caption{\textbf{Control flow of a variational quantum algorithm using hybrid quantum-classical model\cite{fontalvo2019}:} the algorithm is implemented on a quantum device by preparing the initial state $\ket{\varphi} = R(\varphi) \ket{0\ldots0}$ and executing the parameterized unitary $U(\vec{\theta})$. the circuit $C$ implements the measurement scheme to estimate the cost function. To estimate the cost function, the state preparation and necessary measurements are repeated several times to accumulate sufficient statistics. The results are then post-processed on a classical computer which might include statistical modeling. Also, the circuit $C$ could be replaced by a circuit that computes gradients of the cost function, which are required by some optimization routines. An iteration of the optimization algorithm generates a new candidate for the optimal variational parameters $\vec{\theta}'$. The cycle between the quantum and classical modules is repeated until convergence. Here, discontinuous arrows represent transfer of \emph{classical} information.}
+\label{BG:vqa_loop}
+\end{figure}
 %
 
 %
@@ -101,7 +138,7 @@ The variational principle in quantum mechanics states that, for a given quantum 
 \end{equation}
 where $\lambda_{0}$ is the lowest eigenvalue of operator $\hat{O}$. The equality holds only when $\expval*{\hat{O}}_{\ket{\Psi}} = \lambda_0$ and $\ket{\Psi}$ is said to be in the ground state. For a detailed discussion on the variational principle see Appendix~\ref{BG:the_variation_principle}.
 
-In many instances, the eigenstates corresponding to the lowest few eigenvalues, and their properties are of primary interest. In physical systems, this is since low energy states play a dominant role in determining the properties of a system at moderate temperatures, and in optimization problems, they often encode the optimal solution. The variational principle leads to a simple method to find the ground state of a quantum system with $\hat{O}=\hat{H}$ : prepare several parametrized 'trial states' $\ket*{\Psi(\vec{\theta})}$, measure the expectation value of the Hamiltonian, choose the state where the expectation value is minimized. This brings us to the topic below.
+In many instances, the eigenstates corresponding to the lowest few eigenvalues, and their properties are of primary interest. In physical systems, this is since low energy states play a dominant role in determining the properties of a system at moderate temperatures, and in optimization problems, they often encode the optimal solution. The variational principle leads to a simple method to find the ground state of a quantum system with $\hat{O}=\hat{H}$ : prepare several parameterized 'trial states' $\ket*{\Psi(\vec{\theta})}$, measure the expectation value of the Hamiltonian, choose the state where the expectation value is minimized. This brings us to the topic below.
 \subsubsection{How are variational methods implemented in a quantum computer?}
 %
 Let us consider a quantum system $\mathcal{S}$ composed of $N$ qubits which will act as our quantum computer. Take a Hamiltonian $\hat{H}$ of a different system $\mathcal{Q}$ which need not have any relations to $\mathcal{S}$ other than acting on a Hilbert of space of less than $N$ qubits. The goal is to find and study the system $\mathcal{Q}$ using $\mathcal{S}$. The Hamiltonian $\hat{H}$ naturally arises in the description of all physical systems. For example, this Hamiltonian could be derived from a physical system such as a collection of interacting spins or an interacting electronic system. 
@@ -114,7 +151,7 @@ Hamiltonians are not the only operators that can be measured on quantum devices;
 \end{equation}    
 where $\hat{O}$ acts on $\mathcal{Q}$, $\alpha$ runs over several terms polynomial in the size of the system, $h_\alpha$ is a constant coefficient, and each $\hat{O}_\alpha$ has a simple measurement prescription on $\mathcal{S}$. This will enable straightforward measurement of the expectation values of $\hat{O}$ on $\mathcal{Q}$ by weighted summation of projective measurements of $\mathcal{S}$. A simple and relevant example is the decomposition of a Hermitian operator into a weighted sum of Pauli strings (See Appendix~\ref{BG:pauli_basis}).
 
-After deciding the operator and the corresponding measurement scheme through polynomial expansion as given by Eq.~(\ref{BG:poly_sum}), the system $\mathcal{S}$ needs to be prepared into the parametrized trial states. How they are prepared is the key element of VQAs and is discussed in detail under \ref{BG:variational_ansatz}. To give a more general description, influence of the environment on the trial state preparation must be taken into account. This is better described by an ensemble given by a parametrized density matrix $\rho(\vec{\theta})$. In an ideal case where the state preparation is error free and a pure state is maintained, $\rho(\vec{\theta}) = \dyad*{\Psi{\vec{\theta}}}$. In density matrix formalism, the expectation value of an operator is given by
+After deciding the operator and the corresponding measurement scheme through polynomial expansion as given by Eq.~(\ref{BG:poly_sum}), the system $\mathcal{S}$ needs to be prepared into the parameterized trial states. How they are prepared is the key element of VQAs and is discussed in detail under \ref{BG:variational_ansatz}. To give a more general description, influence of the environment on the trial state preparation must be taken into account. This is better described by an ensemble given by a parameterized density matrix $\rho(\vec{\theta})$. In an ideal case where the state preparation is error free and a pure state is maintained, $\rho(\vec{\theta}) = \dyad*{\Psi{\vec{\theta}}}$. In density matrix formalism, the expectation value of an operator is given by
 \begin{equation}
 	\expval*{\hat{O}}_\rho = \Tr [\rho \hat{O}]	
 \end{equation}
@@ -125,7 +162,7 @@ and the variational principle in Eq.~(\ref{BG:var_prin}) still holds. It can be 
 The fact that this principle still holds for mixed states is the main reason for the robustness of VQAs to errors and environmental influence. By finding the set of parameters $\vec{\theta}$ that minimizes $\expval*{\hat{O}}$, one is in effect, finding a set of \emph{experimental parameters} that are most likely to produce the ground state on average, potentially affecting a blind purification of the state of the system being produced \cite{mcclean2016}.  
 
 \section{Variational ansatz construction}
-\ref{BG:variational_ansatz}
+\label{BG:variational_ansatz}
 Variational quantum circuit or the ansatz construction is a crucial aspect of VQA that dictates the success of the algorithm. It is a very active field of research and in most cases finding an optimal ansatz for a problem is difficult than finding a solution to the computational problem itself. The variational ansatz is like a stencil of a given VQA where the parameters are like the prints and holes in it. They are continuously varied to prepare a lot of different trial states. One can make this parametrization classical - i.e, given a list of parameters $\vec{\theta} \in \mathbb{R}^{N_{params}}$, we can prepare a different trial state $\ket*{\Psi{\vec{\theta}}}$ for each $\vec{\theta}$. One might ask whether the classical parametrization makes evaluation of $\expval*{\hat{O}}$ classically tractable, but this is avoided by using gate angles as parameters to control the quantum circuit. With this key idea in mind, now we are ready to define a variational ansatz formally according to \cite{herasymenko2019}. 
 \begin{definition}
 	A \textbf{variational ansatz} on $n_p$ parameters corresponds to a pair $(U, \vec{\ket{0}})$, where $U$ is smooth map from the \textit{parameter space} $\vec{\theta} \in \mathbb{R}^{n_p}$ to the unitary operator $U(\vec{\theta})$ on $\mathbb{C}^{2^N}$, and $\vec{\ket{0}} \in \mathbb{C}^{2^N}$ is the \textit{initial state}, which is acted on to generate the \textit{variational state} $\ket*{\psi(\vec{\theta})} = U(\vec{\theta}) \vec{\ket{0}}$, with variational energy $E(\vec{\theta}) = \expval*{H}{\psi({\vec{\theta}})}$. 
@@ -181,7 +218,9 @@ Historically, problem-inspired ansatz was the first to be proposed and implement
 Within so-called problem-inspired approaches, unitary evolution is in the form of Eq.~(\ref{BG:arbitrary_unitary}), with generators $\hat{g}$ derived from the system properties. Knowledge about the physics behind the problem Hamiltonian being Trotterized can reduce substantially the number of gates needed to implementing the Suzuki-Trotter method. Let us now look at a couple of problem-inspired ansatz examples.
 
 \subsubsection{Example 1: The Unitary Coupled-Cluster Ansatz}
+
 The UCC ansatz is widely used in quantum chemistry problems where the goal is to simulate a fermionic molecular Hamiltonian and obtain the ground state energy. The idea of implementing UCC on quantum computers arose from the observation that the UCC ansatz, which adds quantum correlations to the Hartree-Fock approximation, is inefficient to represent on a classical device \cite{yung2014}. It was first realized on a photonic processor by Peruzzo and his group in 2014 \cite{peruzzo2014}.
+
 
 Typically, we expect the ground state of an interacting system to be a linear combination of low-energy excitations of the corresponding non-interacting problem. In the electronic structure problem this corresponds to excitations of a few particles from the Hartree-Fock state $\ket*{\Psi_{HF}}$ of the Hamiltonian $\hat{H}$. The UCC ansatz proposes a candidate for a ground state based on excitations generated by the \emph{cluster operator} $\hat{T}$ from $\ket*{\Psi_{HF}}$ to low-lying non-interacting higher energy states as  $e^{\hat{T}(\theta)-\hat{T}^\dagger(\theta)}\ket*{\Psi_{HF}}$ \cite{taube2006}. The cluster operator $\hat{T}$ which captures the excitation dynamics are given by\footnote{Given in \textit{physicist} notation. Computational quantum chemistry softwares use the \textit{chemist} notation in which the ordering of the operators change: $\text{physicist:}~ ijkl \rightarrow \text{chemist:}~ iklj $},
 \begin{subequations}
@@ -191,7 +230,7 @@ Typically, we expect the ground state of an interacting system to be a linear co
     \hat{T}^{(1)} & = \sum_{\substack{i,j~ \in~ \text{empty} \\ k,l~ \in ~\text{filled}}} \theta^{i,j}_{k,l}~ \hat{c}_i^\dagger\hat{c}_j^\dagger \hat{c}_k\hat{c}_l~~~~ &\text{(Double excitations)}.
 \end{align}
 \end{subequations}
-The operator $\hat{c}_i$ refers to the fermionic annihilation operator of the $i$-th Hartree-Fock orbital and the sets \emph{empty} and \emph{filled} refer to the corresponding occupied and unoccupied Hartree-Fock orbitals. Here, $\theta^i_k$ and $\theta^{i,j}_{k,l}$ are the free parameters of the problem. Due to the decreasing importance of higher $\hat{T}^{(k)}$, the series is usually truncated after the second or third term. The ansatz is termed UCCSD or UCCSDT, respectively referring to the inclusion of single, double, and triple excitations from the Hartree-Fock ground state. To implement this ansatz on a quantum computer, second quantization methods are used to map the fermionic operators to the qubit operators\footnote{There are many variants of the UCC ansatz, with some of them reducing the depth of the quantum circuit by considering more efficient methods for compiling the fermionic operators using group theory.} resulting in an ansatz of the form in Eq.~(\ref{BG:trotterization}). It is later on converted to a parametrized ansatz via the Trotterization. 
+The operator $\hat{c}_i$ refers to the fermionic annihilation operator of the $i$-th Hartree-Fock orbital and the sets \emph{empty} and \emph{filled} refer to the corresponding occupied and unoccupied Hartree-Fock orbitals. Here, $\theta^i_k$ and $\theta^{i,j}_{k,l}$ are the free parameters of the problem. Due to the decreasing importance of higher $\hat{T}^{(k)}$, the series is usually truncated after the second or third term. The ansatz is termed UCCSD or UCCSDT, respectively referring to the inclusion of single, double, and triple excitations from the Hartree-Fock ground state. To implement this ansatz on a quantum computer, second quantization methods are used to map the fermionic operators to the qubit operators\footnote{There are many variants of the UCC ansatz, with some of them reducing the depth of the quantum circuit by considering more efficient methods for compiling the fermionic operators using group theory.} resulting in an ansatz of the form in Eq.~(\ref{BG:trotterization}). It is later on converted to a parameterized ansatz via the Trotterization. 
 
 
 \subsubsection{Example 2: The Quantum Alternating Operator Ansatz}
@@ -204,13 +243,13 @@ where $\vec{\theta} = (\vec{\gamma},\vec{\beta}))$.  A key strength of QAOA is t
 
 \subsection{Hardware-efficient ansatz construction}
 \label{BG:hardware_specific}
-Problem-inspired ansatz has been shown computationally, to ensure faster convergence to a satisfying solution. However, the deeper circuits associated with Trotterization can be challenging to realize experimentally. The hardware-efficient ansatz is a generic name used for variational ansatz that is aimed at NISQ with a focus on circuit depth reduction. It was introduced in 2017 by Kandala and Mezzacapo as an experiment on a 7 qubit superconducting device \cite{kandala2017}. The key idea is to generate random parametrized quantum circuits only using the better-performing native gates of the underlying hardware with a particular qubit topology. This avoids the circuit depth overhead arising from translating an arbitrary unitary into the native gates. By doing so, one expects to reduce errors during the computation while being able to generate meaningful parametrized trial states. Let us now see, how one can construct such an ansatz with basic single-qubit gates and two-qubit entangling gates according to the method presented in \cite{kandala2017}. 
+Problem-inspired ansatz has been shown computationally, to ensure faster convergence to a satisfying solution. However, the deeper circuits associated with Trotterization can be challenging to realize experimentally. The hardware-efficient ansatz is a generic name used for variational ansatz that is aimed at NISQ with a focus on circuit depth reduction. It was introduced in 2017 by Kandala and Mezzacapo as an experiment on a 7 qubit superconducting device \cite{kandala2017}. The key idea is to generate random parameterized quantum circuits only using the better-performing native gates of the underlying hardware with a particular qubit topology. This avoids the circuit depth overhead arising from translating an arbitrary unitary into the native gates. By doing so, one expects to reduce errors during the computation while being able to generate meaningful parameterized trial states. Let us now see, how one can construct such an ansatz with basic single-qubit gates and two-qubit entangling gates according to the method presented in \cite{kandala2017}. 
 
 The circuit is constructed from \emph{blocks} of single-qubit gates and entangling gates applied to multiple qubits simultaneously. A single sequence of application of a block is called a \emph{layer}. The ansatz circuit generally has multiple such layers and it enables exploration of a larger portion of the Hilbert space. The unitary of a hardware-efficient ansatz with $N_l$ is given by
 \begin{equation}
     U(\vec{\theta})= \prod_{k=1}^{N_l}~U_k(\theta_k) W_k,
 \end{equation}
-where $\vec{\theta}=(\theta_1,\ldots,\theta_{N_l})$ are the variational parameters, unitary $~U_k(\theta_k)= e^{-i\theta_k \hat{O}_k}$ is the unitary generated by the Hermitian operator $\hat{O}_k$, and $W_k$ represents the non-parametrized quantum gates. Typically $\hat{O}_k$ are Pauli strings acting locally on each qubit. In those cases, $U_k$ becomes a product of combinations of single-qubit rotations, each one defined as in Eq.~(\ref{BG:qubit_rotation}). $W_k$ is the entangling unitary constructed from the native gate set. For example for superconducting qubit architectures, CNOT or CZ gates can be used and in trapped ion platforms, XX gates can be used \cite{krantz2019, wright2019}. The choice gate set, qubit topology, and the ordering influence the subspace of the Hilbert space covered by the ansatz and how fast it converges to a solution for a specific problem.
+where $\vec{\theta}=(\theta_1,\ldots,\theta_{N_l})$ are the variational parameters, unitary $~U_k(\theta_k)= e^{-i\theta_k \hat{O}_k}$ is the unitary generated by the Hermitian operator $\hat{O}_k$, and $W_k$ represents the non-parameterized quantum gates. Typically $\hat{O}_k$ are Pauli strings acting locally on each qubit. In those cases, $U_k$ becomes a product of combinations of single-qubit rotations, each one defined as in Eq.~(\ref{BG:qubit_rotation}). $W_k$ is the entangling unitary constructed from the native gate set. For example for superconducting qubit architectures, CNOT or CZ gates can be used and in trapped ion platforms, XX gates can be used \cite{krantz2019, wright2019}. The choice gate set, qubit topology, and the ordering influence the subspace of the Hilbert space covered by the ansatz and how fast it converges to a solution for a specific problem.
 
 In an ideal case, one would expect to perform entangling gates between all pairs of qubits. However, the reality is different due to the limited qubit connectivity which varies among different hardware platforms, thus limiting the ability to perform two-qubit entangling gates. One main advantage of this ansatz is its versatility and problem-agnostic nature. It is especially useful to study Hamiltonians that are similar to the interactions in the hardware. On the other hand, the problem-agnostic nature also leads to problems in optimization when parameters are initialized randomly.  
 
@@ -218,6 +257,7 @@ In an ideal case, one would expect to perform entangling gates between all pairs
 
 
 \section{Cost function}
+\label{BG:section_cost_function}
 After constructing a variational ansatz, the focus should be on finding a way to extract useful classical information from it. Therefore, the next step in a VQA is to encode the problem into an objective function, sometimes called the cost function. From Section \ref{BG:the_variational_paradigm_and_general_quantum_systems}, cost function is just the expectation value of the operator being measured. To reformulate it appropriately, the standard definition of a VQA cost function, denoted $f_{\hat{O}}(\vec{\theta})$ is the expectation value of an observable $\hat{O} \in \text{Herm}(\mathbb{C}^{2^N})$, that is,
 \begin{equation}
 \label{BG:cost_function}
@@ -256,12 +296,13 @@ Even though the properties given above sound trivial, they are difficult to sati
 
 
 \section{Measurement scheme}
+\label{BG:measurement_scheme}
 Let us now address the question of how to evaluate the VQA cost function defined in Eq.~(\ref{BG:cost_function}). Using Eq.~(\ref{BG:poly_sum}) and Theorem~\ref{BG:theorem_pauli_basis}, most interesting observables can be written as a linear combination of a polynomial number of Pauli strings with real coefficients, i.e.,
 \begin{equation}
 \label{BG:poly_pauli_sum}
 	\hat{O} = \sum_{i=1}^{\text{poly}(N)} c_i \sigma_i^\alpha
 \end{equation}
-where $\alpha = x, y, z$ identify the Pauli spin operator. For example, most physically motivates Hamiltonians are $k$-local. That is, each of the Pauli strings in the sum acts nontrivially on at most $k$ qubits. Examples of $k$-local systems include Ising and Heisenberg spin systems, van der Waals gases, strong and weak interactions, and lattice gauge theories. In fact, any system that is consistent with special and general relativity evolves according to local interactions \cite{lloyd1996}. In a $k$-local system there are $\binom{n}{k}$ possible subsets of $k$ qubits. Therefore the number of Pauli strings that appear in the decomposition of a $k$-local Hamiltonian is bounded by a polynomial. When Eq.~(\ref{BG:poly_pauli_sum}) is encoded into a cost function as in Eq.~(\ref{BG:cost_function}) we find that 
+where $\alpha = x, y, z$ identify the Pauli spin operator. For example, most physically motivated Hamiltonians are $k$-local. That is, each of the Pauli strings in the sum acts non-trivially on at most $k$ qubits. Examples of $k$-local systems include Ising and Heisenberg spin systems, van der Waals gases, strong and weak interactions, and lattice gauge theories. In fact, any system that is consistent with special and general relativity evolves according to local interactions \cite{lloyd1996}. In a $k$-local system there are $\binom{n}{k}$ possible subsets of $k$ qubits. Therefore the number of Pauli strings that appear in the decomposition of a $k$-local Hamiltonian is bounded by a polynomial. When Eq.~(\ref{BG:poly_pauli_sum}) is encoded into a cost function as in Eq.~(\ref{BG:cost_function}) we find that 
 
 \begin{align}
 \label{BG:pauli_cost_function}
@@ -281,7 +322,7 @@ denote the spectral decomposition of $P$. Here $E$ can be taken as the expected 
 \begin{equation}
 p(X=\lambda_k)=\abs*{\braket*{\phi_k}{\psi(\vec{0})}}^2.
 \end{equation}
-That is, $X$ is the randvariable representing the outcome of measuring operator $\hat{O}$ on the state $\ket*{\psi(\vec{\theta})}$. \emph{Chebyshev's inequality} is a well known result in probability theory which states that if we take $M$ copies of $X$, denoted by $X_1, \ldots, X_M$, then
+That is, $X$ is the random variable representing the outcome of measuring operator $\hat{O}$ on the state $\ket*{\psi(\vec{\theta})}$. \emph{Chebyshev's inequality} is a well known result in probability theory which states that if we take $M$ copies of $X$, denoted by $X_1, \ldots, X_M$, then
 \begin{equation}
 \label{BG:chebyshev}
 	p\left( \abs{\dfrac{\sum_{i=1}^M X_i}{M}-E} \geq \varepsilon \right) \leq \dfrac{\sigma^2}{M\varepsilon^2},
@@ -302,16 +343,8 @@ The strategy presented here is a very naive way of estimating the cost function 
 
 
 
-
-
-
-
-
-
-
-
-
-\section{Optimization routine} \label{BG:optimization_routine}
+\section{Optimization routine} 
+\label{BG:optimization_routine}
 
 When choosing the variational ansatz, the hope is that it explores a region of Hilbert space in which the minimum $\min_{\vec{\theta}}f_{\hat{O}}(\vec{\theta})$ is near the actual ground state energy of $\hat{O}$. Thus, after making the ansatz choice, the challenge that remains is to find the $\vec{\theta}$ that minimizes the cost function $f_{\hat{O}}$. To this end, a classical optimization routine is employed. Numerical optimization is a vast field, and therefore identifying and adapting existing optimization techniques that are suited to quantum variational approaches requires considerable effort because the success of a VQA depends on the reliability and efficiency of the classical optimization method used. 
 
@@ -337,7 +370,7 @@ Which classical optimization routine works best with VQAs is an open question. B
         \item Suffers in the presence of exploding or vanishing gradients.
     \end{itemize}
     Weighing the pros and cons, gradient-based optimizers are a good choice when there is previous knowledge of the cost landscape and it is known to be smooth to ensure efficient gradient evaluations.
-    \item \emph{Gradient-free approaches:} Gradient-free methods rely on evaluating the function on many points in the cost landscape and inferring a minimum from these evaluations.
+    \item \emph{Gradient-free approaches:} Gradient-free methods rely on evaluating the function at many points in the cost landscape and inferring a minimum from these evaluations.
     \newline  
     \textbf{Advantages:}
     \begin{itemize}
@@ -355,30 +388,58 @@ Which classical optimization routine works best with VQAs is an open question. B
 \subsubsection{Effect of hardware noise}
 As a final remark, it is important to mention that VQAs are somewhat resilient to noise. This is due to the ability to counteract errors in the evaluation by varying the parameter. That is, if an error slightly moves the target minimum, it is still possible to find it by changing the parameters accordingly as explained under Section~\ref{BG:the_variational_paradigm_and_general_quantum_systems}. The cost function is statistical by design. Unlike a typical optimization routine in classical computing, the inherently stochastic environment due to the limited number of measurements, hardware noise, and the presence of barren plateaus (i.e. exponentially vanishing gradients) makes the choice of a suitable classical optimizer difficult. This has lead to active research in the development of quantum-aware optimizers which are believed to deal best with the quantum noise in expectation value evaluations.
 
-\section{Hands-on tutorial: Simulating $H_2$ molecule using VQE}
+\section{Hands-on tutorial: Simulating the hydrogen molecule using VQE}
 \label{BG:hands_on}
+A large number of executions of quantum circuits is required to evaluate the expectation values.  VQE consists of three nested iterations in order to calculate the energy expectation values:
+\begin{enumerate}
+	\item \emph{Outer iteration}: to systematically update parameters $\vec{\theta}$ of quantum state $\ket*{\Psi(\vec{\theta})}$.
+	\item \emph{Middle iteration}: to evaluate the expectations value by calculating the weighted sum of Pauli strings.
+	\item \emph{Inner iterations}: to evaluate the expectation value of a Pauli strings through sampling.
+\end{enumerate}
+
 \begin{itemize}
 	\item short outline of VQE
 	\item flow chart of the algorithm
-	\item mapping and second quantization
+	\item mapping and second quantization \\
+	\url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_basis_sets.ipynb} \\
+    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/QubitMappings.ipynb} \\
+    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_mappings.ipynb}
 	\item calculating the cost function example at bond length
 	\item comparing two different variational forms
-	\item different optimizers and effect of noise
-	\item qubit reduction and symmetries 
+	\item different optimizers and effect of noise \\
+    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_vqe_spsa.ipynb}\\
+    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/aqua/vqe_convergence.ipynb}\\
+    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/aqua/simulations_with_noise_and_measurement_error_mitigation.ipynb} \\
+     \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_vqe_initial_point.ipynb}
+
 \end{itemize}
 
-{
-\color{red}
-VQE consists of three different nested iterations.
-\begin{enumerate}
-	\item outer iterations : to update parameters $\vec{\theta}$ of quantum state $\ket{\Psi(\vec{\theta})}$,
-	\item middle iteration: to evaluate the expectations value by calculating weighted sum of pauli strings, and
-	\item inner iterations : to evaluate the expectation value of a pauli string through sampling.
-	
-\end{enumerate}
-}
+\begin{lstlisting}[language=Python]
+import numpy as np
+    
+def incmatrix(genl1,genl2):
+    m = len(genl1)
+    n = len(genl2)
+    M = None #to become the incidence matrix
+    VT = np.zeros((n*m,1), int)  #dummy variable
+    
+    
+    return M
+\end{lstlisting}
 
+\input{./test.tex}
 
+\begin{lstlisting}[language=Python]
+import numpy as np
+    
+def incmatrix(genl1,genl2):
+    m = len(genl1)
+    n = len(genl2)
+    M = None #to become the incidence matrix
+    VT = np.zeros((n*m,1), int)  #dummy variable
+    
+    return M
+\end{lstlisting}
 
 
 
@@ -394,8 +455,8 @@ VQE consists of three different nested iterations.
 
 %
 \section{Outlook and conclusions}
-Will NISQ devices running VQAs be able to outperform classical algorithms that find approximate solutions to the same computational problems? Nobody knows \emph{yet}, but there is hope. Even if the early generation NISQ devices are incapable of competing with classical methods that were honed over decades of research, experimental results encourage that VQAs can soon surpass classical methods, and so spur further scientific advancements.
-Given that variational algorithms are heuristic and provide only approximate solutions, one might wonder whether there will be value in these strategies once error-correction becomes possible, especially compared to quantum algorithms with a proven advantage on the same tasks. The first thing to acknowledge is that composing algorithms with proven advantage is challenging, and so far only a relatively small number of such algorithms have been discovered. Therefore, for many applications, variational algorithms may be the only quantum algorithms available, even in the error-correction era. A second consideration is that variational algorithms are intended to optimize the use of quantum resources, and therefore it is likely that their error-corrected implementations are more efficient than implementations of their counterparts with proven advantage.  Consequently, quantum algorithms might be still rival traditional algorithms regarding computational cost. Furthermore, since formal demonstrations of quantum advantage are based on asymptotic considerations, there is a chance for variational algorithms to be more efficient and adequately accurate for particular instances of a problem. Finally, the third consideration is that variational algorithms can be joined with traditional quantum algorithms
+Will NISQ devices running VQAs be able to outperform classical algorithms that find solutions to the same computational problems? Nobody knows \emph{yet}, but there is hope. Even if the early generation NISQ devices are incapable of competing with classical methods that were honed over decades of research, experimental results encourage that VQAs can soon surpass classical methods, and so spur further scientific advancements.
+Given that variational algorithms are heuristic and provide only approximate solutions, one might wonder whether there will be value in these strategies once error-correction becomes possible, especially compared to quantum algorithms with a proven advantage on the same tasks. The first thing to acknowledge is that composing algorithms with proven advantage is challenging, and so far only a relatively small number of such algorithms have been discovered. Therefore, for many applications, variational algorithms may be the only quantum algorithms available, even in the error-correction era. A second consideration is that variational algorithms are intended to optimize the use of quantum resources, and therefore it is likely that their error-corrected implementations are more efficient than implementations of their counterparts with proven advantage.  Consequently, quantum algorithms might still rival traditional algorithms regarding computational cost. Furthermore, since formal demonstrations of quantum advantage are based on asymptotic considerations, there is a chance for variational algorithms to be more efficient and adequately accurate for particular instances of a problem. Finally, the third consideration is that variational algorithms can be joined with traditional quantum algorithms
 to obtain even more powerful approaches. A concrete example of this is QPE and VQE. Procedures employed for simulating quantum systems with provable speed-up, such as QPE, require the preparation of states with sufficient overlap with the eigenstates of the Hamiltonian to measure eigenvalues with high probability. Using VQE, it will be possible to prepare such states, ultimately boosting the success probability of phase estimation. Finally, it must be pointed out that the success of variational methods ultimately depends on the quality of the quantum devices and the quantum operations they implement. Therefore, maximizing the utility of quantum devices, in particular, early NISQ devices, is another way to push quantum computing towards the practical frontier. These improvements can be introduced at the software level by finding more efficient protocols to implement quantum operations common to many algorithms. The work presented here is only a part of the continuously growing body of research in variational algorithms\cite{NationalAcademiesofSciencesEngineering2019}. The history of this field has just started, and many exciting developments await for us.
 
 % START APPENDIX
