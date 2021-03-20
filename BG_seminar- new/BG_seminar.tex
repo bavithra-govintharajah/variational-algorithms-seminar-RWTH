@@ -302,7 +302,7 @@ Let us now address the question of how to evaluate the VQA cost function defined
 \label{BG:poly_pauli_sum}
 	\hat{O} = \sum_{i=1}^{\text{poly}(N)} c_i \sigma_i^\alpha
 \end{equation}
-where $\alpha = x, y, z$ identify the Pauli spin operator. For example, most physically motivates Hamiltonians are $k$-local. That is, each of the Pauli strings in the sum acts nontrivially on at most $k$ qubits. Examples of $k$-local systems include Ising and Heisenberg spin systems, van der Waals gases, strong and weak interactions, and lattice gauge theories. In fact, any system that is consistent with special and general relativity evolves according to local interactions \cite{lloyd1996}. In a $k$-local system there are $\binom{n}{k}$ possible subsets of $k$ qubits. Therefore the number of Pauli strings that appear in the decomposition of a $k$-local Hamiltonian is bounded by a polynomial. When Eq.~(\ref{BG:poly_pauli_sum}) is encoded into a cost function as in Eq.~(\ref{BG:cost_function}) we find that 
+where $\alpha = x, y, z$ identify the Pauli spin operator. For example, most physically motivated Hamiltonians are $k$-local. That is, each of the Pauli strings in the sum acts non-trivially on at most $k$ qubits. Examples of $k$-local systems include Ising and Heisenberg spin systems, van der Waals gases, strong and weak interactions, and lattice gauge theories. In fact, any system that is consistent with special and general relativity evolves according to local interactions \cite{lloyd1996}. In a $k$-local system there are $\binom{n}{k}$ possible subsets of $k$ qubits. Therefore the number of Pauli strings that appear in the decomposition of a $k$-local Hamiltonian is bounded by a polynomial. When Eq.~(\ref{BG:poly_pauli_sum}) is encoded into a cost function as in Eq.~(\ref{BG:cost_function}) we find that 
 
 \begin{align}
 \label{BG:pauli_cost_function}
@@ -322,7 +322,7 @@ denote the spectral decomposition of $P$. Here $E$ can be taken as the expected 
 \begin{equation}
 p(X=\lambda_k)=\abs*{\braket*{\phi_k}{\psi(\vec{0})}}^2.
 \end{equation}
-That is, $X$ is the randvariable representing the outcome of measuring operator $\hat{O}$ on the state $\ket*{\psi(\vec{\theta})}$. \emph{Chebyshev's inequality} is a well known result in probability theory which states that if we take $M$ copies of $X$, denoted by $X_1, \ldots, X_M$, then
+That is, $X$ is the random variable representing the outcome of measuring operator $\hat{O}$ on the state $\ket*{\psi(\vec{\theta})}$. \emph{Chebyshev's inequality} is a well known result in probability theory which states that if we take $M$ copies of $X$, denoted by $X_1, \ldots, X_M$, then
 \begin{equation}
 \label{BG:chebyshev}
 	p\left( \abs{\dfrac{\sum_{i=1}^M X_i}{M}-E} \geq \varepsilon \right) \leq \dfrac{\sigma^2}{M\varepsilon^2},
@@ -339,15 +339,6 @@ measurements must be performed, to obtain, with high probability, an estimate of
 
 \subsection{Measurement scheme optimization}
 The strategy presented here is a very naive way of estimating the cost function by sampling every Pauli string and using the outcome statistics to estimate the corresponding expectation value. As mentioned before, the key advantage of this approach is that the coherence time to make a single measurement after preparing the state is $O(1)$. Conversely, the disadvantage of this approach is the scaling of the total number of operations, as a function of the desired precision $\varepsilon$ as $O(\varepsilon^{-2})$ \cite{peruzzo2014}. Moreover, this scaling also reflects the number of state preparation repetitions required. This has led to an active area of research in measurement optimization strategies. One example of such a technique would be to use the commutation properties of Pauli strings and make simultaneous measurements. The problem is then to divide the Pauli strings into a small number of commuting subsets. It turns out that this problem is equivalent to the clique cover problem, which is known to be NP-complete\cite{yen2020}. Researchers have proposed new methods using approximation algorithms for the clique cover problem as a grouping, with various degrees of success. By speeding up the measurement scheme with new techniques, it is possible to realize faster algorithms with efficient use of quantum resources.   
-
-
-
-
-
-
-
-
-
 
 
 
