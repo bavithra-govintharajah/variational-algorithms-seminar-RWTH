@@ -443,8 +443,13 @@ The VQE is a popular VQA candidate that has already entered the experimental reg
 \end{enumerate}
 Let us now apply the theory learned from previous sections to solve the problem under study in Example 1 from \ref{BG:ground_state_approx}. The goal is to analyze the energy landscape and estimate the ground state energy of $H_2$ molecule using VQE.
 
-\paragraph{Before we begin:}The calculations and simulations shown in this section were done using Qiskit\footnote{At the time of writing, version 0.24.0}. Since $H_2$ is a small molecule, the problem is classically tractable and good classical benchmarking results are already available. Hence the reader will be able to replicate the results on their own with the limited computational resources of a personal computer. Since all the required functions and algorithms are readily available on Qiskit this section will focus more on the theory behind those steps so that the reader can develop an understanding which will enable them to apply the technique other problems on their own. 
-
+\paragraph{Before we begin:}The calculations and simulations given in this section were performed using Qiskit\footnote{At the time of writing, version 0.24.0}. Since $H_2$ is a small molecule, the problem is classically tractable and good classical benchmarking results are already available. Hence the reader will be able to replicate the results on their own with the limited computational resources of a personal computer. Since all the required functions and algorithms are readily available on Qiskit this section will focus more on the theory behind those steps as shown in Fig.~\ref{BG:vqe_loop} so that the reader can develop an understanding which will enable them to apply the technique to other problems on their own. 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{BG_seminar- new/BG_vqe_loop.pdf}
+\caption{A flow chart adapted from \cite{omalley2016} describing the steps required to compute molecular energies using VQE. Here, steps inside the dashed box represents classical preparation.}
+\label{BG:vqe_loop}
+\end{figure}
 \subsubsection{1 . Formulate the electronic structure problem }
 
 \subsubsection{Fermion to qubit mapping}
