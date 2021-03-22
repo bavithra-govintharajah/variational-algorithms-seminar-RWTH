@@ -6,10 +6,10 @@
 \usepackage{physics}
 \usepackage{amsthm}
 \usepackage{multirow}
-\usepackage{tabularx}
+\usepackage{array}
 \usepackage{tikz}
 \usepackage{lscape} 
-\usetikzlibrary{quantikz}
+
 \usepackage{pgfplots}
 \DeclareUnicodeCharacter{2212}{−}
 \usepgfplotslibrary{groupplots,dateplot}
@@ -413,22 +413,36 @@ Let us now apply the theory learned from previous sections to solve the problem 
 
 \subsubsection{1 . Formulate the electronic structure problem }
 
-
-\newpage
-{\color{red} complete table Quantum Chemistry in the Age of Quantum Computing }
 \begin{landscape}
-\begin{table}[h!]
+\begin{table}[p]
 \centering
-\begin{tabularx}{600pt}{|| X X X X X X X ||}
+\begin{tabular}{m{3cm} m{3cm} m{2cm} m{4.5cm} m{4.5cm} m{3cm} m{1cm}}
+
+Architecture & Molecule & qubits & Ansatz & Optimization routine & Computed state & ref \\
  \hline
- Architecture & Molecule & \#qubits & Ansatz & Optimization routine & Computed state & Reference \\ [0.5ex] 
- \hline\hline \\ 
- Photonic chip & $HeH^+$ & 2 & hardware-specific parametrized
-ansatz  & Nelder- Mead & ground state & cite \\[0.75ex] 
-Single trapped & $HeH^+$ & & UCC & Nelder- Mead & ground and excited state & \\[0.5ex] 
-Transmon qubits & $H_2$ &  \\[0.75ex] 
-\hline
-\end{tabularx}
+Photonic chip & $HeH^+$ & 2 & hardware-specific parametrized ansatz  & Nelder- Mead & ground state & \cite{peruzzo2014}\\
+
+Transmon qubits & $H_2$ & 2 & UCC & grid-scan, local optimization & ground state  \\
+
+Transmon qubits & $H_2$ & 2 & hardware-efficient ansatz & SPSA & ground state & \cite{kandala2017} \\
+
+Transmon qubits & $LiH$ & 4 & hardware-efficient ansatz & SPSA & ground state & \cite{kandala2017} \\
+
+Transmon qubits & $BeH_2$ & 6 & hardware-efficient ansatz & SPSA & ground state & \cite{kandala2017} \\
+
+$Ca^+$ ion trap & $H_2$ & 2 & UCC & grid-scan, local optimization & ground state & \cite{hempel2018} \\
+
+$Ca^+$ ion trap processor & LiH & 3 & approximate UCC & grid-scan, local optimization & ground state & \cite{hempel2018} \\
+
+Transmon qubits & $H_2$ & 2 & hardware-specific parametrized ansatz & PSO & ground and excited states & \cite{colless2018} \\
+
+$Si$ photonic chip & two chlorophyll units in 18-mer ring of LHII complex & 2 & parametrized Hamiltonian
+ansatz with truncation scheme & PSO & ground and excited states & \cite{santagati2018} \\
+
+Transmon qubits via cloud & deuteron & 2-3 & UCC & grid-scan & ground state & \cite{dumitrescu2018}
+\end{tabular}
+\caption{Table to test captions and labels}
+\label{BG:vqe_experiments}
 \end{table}
 \end{landscape}
 
