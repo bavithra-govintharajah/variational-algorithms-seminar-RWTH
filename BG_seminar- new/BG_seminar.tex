@@ -75,7 +75,7 @@
 
 %
 \begin{abstract}
-{\color{red} don't forget the abstract}
+Simulation of large quantum systems or solving large-scale linear algebraic problems is classically inefficient due to high computational costs. Quantum computers promise to unlock these uncharted territories, although fault-tolerant quantum computers will likely not be available soon. Quantum devices available at present have serious bottlenecks such as the limited number of qubits and noise that severely limit circuit depths. Variational Quantum Algorithms (VQAs) employ a quantum-classical hybrid approach to train a parametrized quantum circuit. They have emerged as promising candidates to address the constraints of near-term quantum computing. Various VQAs have now been proposed for several applications in various disciplines spanning physics, machine learning, quantum chemistry, and combinatorial optimization and they appear to the best hope for obtaining quantum advantage. Nevertheless, open questions remain including the trainability, accuracy, and efficiency of VQAs. In this chapter, an introduction to the concept of VQAs is presented. The key structure of these algorithms, their limitations, and their advantages are discussed in detail. Furthermore, an example of applying VQA to simulate small molecules is presented.
 \end{abstract}
 %
 %
@@ -391,28 +391,6 @@ Which classical optimization routine works best with VQAs is an open question. B
 
 \subsubsection{Effect of hardware noise}
 As a final remark, it is important to mention that VQAs are somewhat resilient to noise. This is due to the ability to counteract errors in the evaluation by varying the parameter. That is, if an error slightly moves the target minimum, it is still possible to find it by changing the parameters accordingly as explained under Section~\ref{BG:the_variational_paradigm_and_general_quantum_systems}. The cost function is statistical by design. Unlike a typical optimization routine in classical computing, the inherently stochastic environment due to the limited number of measurements, hardware noise, and the presence of barren plateaus (i.e. exponentially vanishing gradients) makes the choice of a suitable classical optimizer difficult. This has lead to active research in the development of quantum-aware optimizers which are believed to deal best with the quantum noise in expectation value evaluations.
-
-\section{Qiskit hands-on example: Molecular quantum simulation using VQE}
-\label{BG:hands_on}
-
-The VQE is a popular VQA candidate that has already entered the application regime. It is an application of the time-independent variational principle, where the ansatz preparation as well as cost function estimation are both implemented on a quantum processor. As it's a VQA, the modular structure discussed in section \ref{BG:outline_of_vqa} makes up the basis of VQE. The specific details of the VQE can be broken down into iterative steps:
-\begin{enumerate}
-    \item Preparation of the trial states by applying the chosen parametrized unitaries.
-    \item Determination of the expectation value of every term in the qubit representation of the Hamiltonian via an efficient partial tomography. A large number of executions of quantum circuits is required to evaluate the expectation values.  This step consists of three nested iterations:
-    \begin{enumerate}
-	\item \emph{Outer iteration}: to systematically update parameters $\vec{\theta}$ of quantum state $\ket*{\Psi(\vec{\theta})}$.
-	\item \emph{Middle iteration}: to evaluate the expectations value by calculating the weighted sum of Pauli strings.
-	\item \emph{Inner iterations}: to evaluate the expectation value of a Pauli strings through sampling.
-\end{enumerate}
-\item Parameter update using a classical optimization routine
-\item Repetition of steps 2 and 3 until convergence criteria are satisfied. 
-\end{enumerate}
-Let us now apply the theory learned from previous sections to solve the problem under study in Example 1 from \ref{BG:ground_state_approx}. The goal is to analyze the energy landscape and estimate the ground state energy of $H_2$ molecule using VQE. 
-
-\paragraph{Before we begin:}The calculations and simulations shown in this section were done using Qiskit\footnote{At the time of writing, version 0.24.0}. Since $H_2$ is a small molecule, the problem is classically tractable and good classical benchmarking results are already available. Hence the reader will be able to replicate the results on their own with the limited computational resources of a personal computer. Since all the required functions and algorithms are readily available on Qiskit this section will focus more on the theory behind those steps so that the reader can develop an understanding which will enable them to apply the technique other problems on their own. 
-
-\subsubsection{1 . Formulate the electronic structure problem }
-
 \begin{landscape}
 \begin{table}[p]
 \centering
@@ -441,14 +419,34 @@ ansatz with truncation scheme & PSO & ground and excited states & \cite{santagat
 
 Transmon qubits via cloud & deuteron & 2-3 & UCC & grid-scan & ground state & \cite{dumitrescu2018}
 \end{tabular}
-\caption{Table to test captions and labels}
+\caption{Representative experimental demonstrations of the VQE algorithm using various quantum computer architectures \cite{cao2019}. \\
+Abbreviations: SPSA, simultaneous perturbation stochastic approximation; PSO, particle swarm optimization.}
 \label{BG:vqe_experiments}
 \end{table}
 \end{landscape}
 
-\newpage
-\subsubsection{Fermion to qubit mapping}
+\section{Qiskit hands-on example: Molecular quantum simulation using VQE}
+\label{BG:hands_on}
 
+The VQE is a popular VQA candidate that has already entered the experimental regime as can be seen in  Table~\ref{BG:vqe_experiments}. It is an application of the time-independent variational principle, where the ansatz preparation as well as cost function estimation are both implemented on a quantum processor. As it's a VQA, the modular structure discussed in section \ref{BG:outline_of_vqa} makes up the basis of VQE. The specific details of the VQE can be broken down into iterative steps:
+\begin{enumerate}
+    \item Preparation of the trial states by applying the chosen parametrized unitaries.
+    \item Determination of the expectation value of every term in the qubit representation of the Hamiltonian via an efficient partial tomography. A large number of executions of quantum circuits is required to evaluate the expectation values.  This step consists of three nested iterations:
+    \begin{enumerate}
+	\item \emph{Outer iteration}: to systematically update parameters $\vec{\theta}$ of quantum state $\ket*{\Psi(\vec{\theta})}$.
+	\item \emph{Middle iteration}: to evaluate the expectations value by calculating the weighted sum of Pauli strings.
+	\item \emph{Inner iterations}: to evaluate the expectation value of a Pauli strings through sampling.
+\end{enumerate}
+\item Parameter update using a classical optimization routine
+\item Repetition of steps 2 and 3 until convergence criteria are satisfied. 
+\end{enumerate}
+Let us now apply the theory learned from previous sections to solve the problem under study in Example 1 from \ref{BG:ground_state_approx}. The goal is to analyze the energy landscape and estimate the ground state energy of $H_2$ molecule using VQE.
+
+\paragraph{Before we begin:}The calculations and simulations shown in this section were done using Qiskit\footnote{At the time of writing, version 0.24.0}. Since $H_2$ is a small molecule, the problem is classically tractable and good classical benchmarking results are already available. Hence the reader will be able to replicate the results on their own with the limited computational resources of a personal computer. Since all the required functions and algorithms are readily available on Qiskit this section will focus more on the theory behind those steps so that the reader can develop an understanding which will enable them to apply the technique other problems on their own. 
+
+\subsubsection{1 . Formulate the electronic structure problem }
+
+\subsubsection{Fermion to qubit mapping}
 
 
 \begin{itemize}
@@ -509,7 +507,7 @@ def incmatrix(genl1,genl2):
 \section{Outlook and conclusions}
 Will NISQ devices running VQAs be able to outperform classical algorithms that find solutions to the same computational problems? Nobody knows \emph{yet}, but there is hope. Even if the early generation NISQ devices are incapable of competing with classical methods that were honed over decades of research, experimental results encourage that VQAs can soon surpass classical methods, and so spur further scientific advancements.
 Given that variational algorithms are heuristic and provide only approximate solutions, one might wonder whether there will be value in these strategies once error-correction becomes possible, especially compared to quantum algorithms with a proven advantage on the same tasks. The first thing to acknowledge is that composing algorithms with proven advantage is challenging, and so far only a relatively small number of such algorithms have been discovered. Therefore, for many applications, variational algorithms may be the only quantum algorithms available, even in the error-correction era. A second consideration is that variational algorithms are intended to optimize the use of quantum resources, and therefore it is likely that their error-corrected implementations are more efficient than implementations of their counterparts with proven advantage.  Consequently, quantum algorithms might still rival traditional algorithms regarding computational cost. Furthermore, since formal demonstrations of quantum advantage are based on asymptotic considerations, there is a chance for variational algorithms to be more efficient and adequately accurate for particular instances of a problem. Finally, the third consideration is that variational algorithms can be joined with traditional quantum algorithms
-to obtain even more powerful approaches. A concrete example of this is QPE and VQE. Procedures employed for simulating quantum systems with provable speed-up, such as QPE, require the preparation of states with sufficient overlap with the eigenstates of the Hamiltonian to measure eigenvalues with high probability. Using VQE, it will be possible to prepare such states, ultimately boosting the success probability of phase estimation. Finally, it must be pointed out that the success of variational methods ultimately depends on the quality of the quantum devices and the quantum operations they implement. Therefore, maximizing the utility of quantum devices, in particular, early NISQ devices, is another way to push quantum computing towards the practical frontier. These improvements can be introduced at the software level by finding more efficient protocols to implement quantum operations common to many algorithms. The work presented here is only a part of the continuously growing body of research in variational algorithms\cite{NationalAcademiesofSciencesEngineering2019}. The history of this field has just started, and many exciting developments await for us.
+to obtain even more powerful approaches. A concrete example of this is QPE and VQE. Procedures employed for simulating quantum systems with provable speed-up, such as QPE, require the preparation of states with sufficient overlap with the eigenstates of the Hamiltonian to measure eigenvalues with high probability. Using VQE, it will be possible to prepare such states, ultimately boosting the success probability of phase estimation. Finally, it must be pointed out that the success of variational methods ultimately depends on the quality of the quantum devices and the quantum operations they implement. Therefore, maximizing the utility of quantum devices, in particular, early NISQ devices, is another way to push quantum computing towards the practical frontier. These improvements can be introduced at the software level by finding more efficient protocols to implement quantum operations common to many algorithms. The work presented here is only a part of the continuously growing body of research in variational algorithms. The journey of this field has just started, and many exciting developments await us.
 
 % START APPENDIX
 %
