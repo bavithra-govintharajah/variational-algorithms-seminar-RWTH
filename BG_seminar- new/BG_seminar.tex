@@ -25,7 +25,7 @@
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
-\definecolor{backcolour}{rgb}{0.94,0.97,1.00}
+\definecolor{backcolour}{gray}{0.97}
 
 \lstdefinestyle{mystyle}{
     backgroundcolor=\color{backcolour},   
@@ -479,55 +479,14 @@ The state under consideration is an electronic wavefunction. This means the anti
 \begin{tabular}{l c} 
  Quantization & Number of qubits \\ [0.5ex] 
  \hline
- First, basis sets & $N[\log_2(M)]$ \\ 
- Second, basis sets & $M$ \\ [1ex] 
+ First quantization, basis sets method & $N[\log_2(M)]$ \\ 
+ Second quantization, basis sets method & $M$ \\ [1ex] 
  \hline
 \end{tabular}
 \caption{\textbf{The number of qubits required to store the wavefunction using different quantization methods.} $N$ is the number of simulated electrons in the problem, $M$ is the number of spin orbitals used in the basis set. The number of qubits can often be further reduced \cite{mcardle2020}.}
 \label{BG:store_wavefunction}
 \end{table}
 
-
-Once the quantization step is over, we proceed to the mapping step. Here the operators that act on \emph{indistinguishable} fermions to operators that act on \emph{distinguishable} qubits. To this end, an encoding method, which is just a map from the fermionic Fock space to the qubit Hilbert space is applied. This will lead to every fermionic state being represented by a qubit state. 
-
-There are multiple second quantization encoding methods, which are described next.  
-\begin{enumerate}
-    \item \emph{Jordan - Wigner encoding (JW)}
-    \begin{itemize}
-        \item Occupation number of the spin orbital is stored in the $\ket{0}$ and $\ket{1}$ state of a qubit (unoccupied and occupied respectively).
-        \item The creation operator $\hat{c}_j^\dagger$ of the electronic orbital is associated with a qubit $j$ via  
-        \begin{equation}
-            \hat{c}^\dagger_j \leftrightarrow \underbrace{\hat{Z}_1 \otimes \ldots \otimes \hat{Z}_{j-1}}_{\text{application of a phase}} \otimes \hat{Z}^\dagger_j\otimes \hat{I},
-            \end{equation}
-            and has two operations: changing the occupation number locally and applying a phase according to parity.
-        \item Stores the parity non-locally and occupation number locally.    
-        \item The large weight of the parity-counting phase can be costly for certain quantum simulation algorithms.
-    \end{itemize}
-    \item\emph{ Parity encoding (P)} \cite{seeley2012}
-    \begin{itemize}
-        \item It is the dual version of the JW mapping.
-        \item While JW stores the occupation number of each spin orbital in each qubit, the parity mapping stores the parity in each qubit.
-        \item Stores the parity locally and occupation number non-locally.
-        \item Parity operators are low weight while the occupation operators become high weight.
-    \end{itemize}
-    \item \emph{Bravyi-Kitaev encoding (BK)} \cite{bravyi2002}
-    \begin{itemize}
-        \item Combines the advantages of JW and P encding methods through non-trial transformation. 
-        \item Applies only for systems with a spin orbital number equal to a power of 2
-        \item BK mapping allows for simulation of interacting fermion systems on a graph where each node corresponds to a local fermionic mode and each edge represents a pairwise interaction \cite{cao2019}.
-    \end{itemize}
-    
-\end{enumerate}
-\subsection{Simulating the Hydrogen molecule}
-Now that we have a clear understanding both the quantum and classical parts of the algorithm it's time to use that to solve
-for the ground state energy of $H_2$ molecule using use basis set method in second quantization. 
-\paragraph{Choose the basis set functions.} An ideal choice of basis set function should be one that captures the physics of the problem, such that a good representation can be achieved using the smallest possible set. A good basis set \cite{cao2019}
-\begin{itemize}
-    \item allows systematic and fast converging extrapolation to the basis set limit
-    \item has a mathematical form which facilitates the evaluation of molecular integrals,
-    \item should not only describe energies but also other useful properties.
-\end{itemize}
-Let us pick the sets Slater-type orbitals with $6$ Gaussians (STO-nG with n=6), split valence basis 6-31G and correlation consistent polarized valence double $\zeta$ (cc-PVDZ), and observe the number of qubits required.  
 \begin{landscape}
 \begin{table}[p]
     \centering
@@ -579,14 +538,140 @@ Grid-based methods & Basis set methods \\ [0.5ex]
     \label{BG:first_second}
 \end{table}
 \end{landscape}
+Once the quantization step is over, we proceed to the mapping step. Here the operators that act on \emph{indistinguishable} fermions to operators that act on \emph{distinguishable} qubits. To this end, an encoding method, which is just a map from the fermionic Fock space to the qubit Hilbert space is applied. This will lead to every fermionic state being represented by a qubit state. 
+
+There are multiple second quantization encoding methods, which are described next.  
+\begin{enumerate}
+    \item \emph{Jordan - Wigner encoding (JW)}
+    \begin{itemize}
+        \item Occupation number of the spin orbital is stored in the $\ket{0}$ and $\ket{1}$ state of a qubit (unoccupied and occupied respectively).
+        \item The creation operator $\hat{c}_j^\dagger$ of the electronic orbital is associated with a qubit $j$ via  
+        \begin{equation}
+            \hat{c}^\dagger_j \leftrightarrow \underbrace{\hat{Z}_1 \otimes \ldots \otimes \hat{Z}_{j-1}}_{\text{application of a phase}} \otimes \hat{Z}^\dagger_j\otimes \hat{I},
+            \end{equation}
+            and has two operations: changing the occupation number locally and applying a phase according to parity.
+        \item Stores the parity non-locally and occupation number locally.    
+        \item The large weight of the parity-counting phase can be costly for certain quantum simulation algorithms.
+    \end{itemize}
+    \item\emph{ Parity encoding (P)} \cite{seeley2012}
+    \begin{itemize}
+        \item It is the dual version of the JW mapping.
+        \item While JW stores the occupation number of each spin orbital in each qubit, the parity mapping stores the parity in each qubit.
+        \item Stores the parity locally and occupation number non-locally.
+        \item Parity operators are low weight while the occupation operators become high weight.
+    \end{itemize}
+    \item \emph{Bravyi-Kitaev encoding (BK)} \cite{bravyi2002}
+    \begin{itemize}
+        \item Combines the advantages of JW and P encding methods through non-trial transformation. 
+        \item Applies only for systems with a spin orbital number equal to a power of 2
+        \item BK mapping allows for simulation of interacting fermion systems on a graph where each node corresponds to a local fermionic mode and each edge represents a pairwise interaction \cite{cao2019}.
+    \end{itemize}
+    
+\end{enumerate}
+\subsection{Simulating the Hydrogen molecule}
+Now that we have a clear understanding both the quantum and classical parts of the algorithm it's time to use that to solve
+for the ground state energy of $H_2$ molecule using use basis set method in second quantization. 
+\paragraph{Choose the basis set functions.} An ideal choice of basis set function should be one that captures the physics of the problem, such that a good representation can be achieved using the smallest possible set. A good basis set \cite{cao2019}
+\begin{itemize}
+    \item allows systematic and fast converging extrapolation to the basis set limit
+    \item has a mathematical form which facilitates the evaluation of molecular integrals,
+    \item should not only describe energies but also other useful properties.
+\end{itemize}
+Let us first consider the sets Slater-type orbitals with $6$ Gaussians (STO-nG with n=3), split valence basis 6-31G and correlation consistent polarized valence double-$\zeta$ (cc-PVDZ) encoded using JW transformation and observe how the number of qubits vary.
+act diagonalization method.   
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+
+
+basis_sets = ['sto6g', '631g', 'ccpvdz']
+map_types = ['JORDAN_WIGNER', 'PARITY', 'BRAVYI_KITAEV']
+threshold = 0.00000001
+
+def get_qubit_hamiltonian(d, basis_set, map_type):
+    """
+    Obtain the qubit operators from the fermionic operators
+    after second quantization
+    
+    Args:
+        d: inter atomic distance
+        basis_set: computational chemistry basis set
+        map_type: encoding method
+
+    Returns: weighted Pauli sum
+
+    """
+    driver = PySCFDriver(atom="H .0 .0 .0; H .0 .0 " + str(d) , 
+                         unit=UnitsType.ANGSTROM, 
+                         charge=0,
+                         spin=0,
+                         basis=basis_set)
+    molecule = driver.run()
+    h1 = molecule.one_body_integrals
+    h2 = molecule.two_body_integrals
+    repulsion_energy = molecule.nuclear_repulsion_energy
+    fermionic_op = FermionicOperator(h1,h2)
+    qubit_op = fermionic_op.mapping(map_type=map_type, threshold=threshold)
+    return qubit_op, repulsion_energy
+    
+qubit_ops = {}
+for set in basis_sets:
+    qubit_ops["qubitOp_{0}".format(set)],_ = get_qubit_hamiltonian(0.735, set,'JORDAN_WIGNER')
+\end{lstlisting}
+\begin{verbatim}
+--- qubitOp_sto6g --- Representation: paulis, qubits: 4, size: 15
+
+--- qubitOp_631g --- Representation: paulis, qubits: 8, size: 185
+
+--- qubitOp_ccpvdz --- Representation: paulis, qubits: 20, size: 2951
+\end{verbatim}
+
+According to the output, \verb|qubits| represent the number of qubits needed and \verb|size| represent the number of Pauli strings in the Hamiltonian written as a weighted sum. For example, the 4 qubit Hamiltonian obtained with STO-nG basis set and JW encoding above is the sum of 15 weighted Pauli strings given by
+\begin{dmath}
+H = h_0 I + h_1Z_0 + h_2 Z_1 + h_3 Z_2 + h_4 Z_3 
++h_5 Z_0Z_1
++h_6 Z_0Z_2
++h_7 Z_1 Z_2
++h_8 Z_0 Z_3
++h_9 Z_1 Z_3
++h_{10} Z_2 Z_3
++h_{11} Y_0 Y_1 X_2 X_3
++h_{12} X_0 Y_1 Y_2 X_3
++h_{13} Y_0 X_1 X_2 Y_3
++h_{14} X_0 X_1 Y_2 Y_3.
+\end{dmath}
+
+
+\begin{lstlisting}[language=Python]
+def exact_eigensolver(distance, basis_set, map_type):
+    """
+    Calculate the eigenvalue using NumPy eigensolver method
+
+    Args:
+        d: inter atomic distance
+        basis_set: computational chemistry basis set
+        map_type: encoding method
+
+    Returns: exact eigenvlaue
+
+    """
+    qubit_op, repulsion = get_qubit_hamiltonian(distance,basis_set, map_type)
+    exact_solution = NumPyEigensolver(qubit_op).run()
+    exact_energy = np.real(exact_solution.eigenvalues) + repulsion
+    return exact_energy
+    
+distances = np.linspace(0.05, 2.5, 40)
+
+
+
+\end{lstlisting}
+
+
 
 
 {
 \color{red}
 \begin{itemize}
-    \item basis sets and number of qubits
-    \item mapping type comparison
-    \item hardware ansatz
     \item uccsd
     \item vqe plots
     \item different optimizers and time taken
@@ -594,11 +679,6 @@ Grid-based methods & Basis set methods \\ [0.5ex]
 }
 
 \begin{itemize}
-	\item mapping and second quantization \\
-	\url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_basis_sets.ipynb} \\
-    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/QubitMappings.ipynb} \\
-    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_mappings.ipynb}
-	\item calculating the cost function example at bond length
 	\item comparing two different variational forms
 	\item different optimizers and effect of noise \\
     \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_vqe_spsa.ipynb}\\
