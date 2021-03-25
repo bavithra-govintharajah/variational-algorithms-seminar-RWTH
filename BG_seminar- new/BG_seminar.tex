@@ -578,46 +578,45 @@ for the ground state energy of $H_2$ molecule using use basis set method in seco
     \item should not only describe energies but also other useful properties.
 \end{itemize}
 Let us first consider the sets Slater-type orbitals with $6$ Gaussians (STO-nG with n=3), split valence basis 6-31G and correlation consistent polarized valence double-$\zeta$ (cc-PVDZ) encoded using JW transformation and observe how the number of qubits vary.
-act diagonalization method.   
 
 \begin{lstlisting}[language=Python]
 import numpy as np
 
-
-basis_sets = ['sto6g', '631g', 'ccpvdz']
-map_types = ['JORDAN_WIGNER', 'PARITY', 'BRAVYI_KITAEV']
-threshold = 0.00000001
-
-def get_qubit_hamiltonian(d, basis_set, map_type):
+def get_qubit_hamiltonian(d, basis_set, map_type='jordan_wigner'):
     """
-    Obtain the qubit operators from the fermionic operators
-    after second quantization
-    
+    Obtain the qubit operators from the fermionic operators after second quantization.
     Args:
-        d: inter atomic distance
+        d: inter-atomic distance
         basis_set: computational chemistry basis set
         map_type: encoding method
 
-    Returns: weighted Pauli sum
+    Returns: qubit Hamiltonian as a weighted summed of Paulis, energy shift because of nuclear repulsion, number of particles and number of spin orbitals
 
     """
-    driver = PySCFDriver(atom="H .0 .0 .0; H .0 .0 " + str(d) , 
-                         unit=UnitsType.ANGSTROM, 
+    driver = PySCFDriver(atom="H .0 .0 .0; H .0 .0 " + str(d) ,
+                         unit=UnitsType.ANGSTROM,
                          charge=0,
                          spin=0,
                          basis=basis_set)
     molecule = driver.run()
     h1 = molecule.one_body_integrals
     h2 = molecule.two_body_integrals
+    num_particles = molecule.num_alpha + molecule.num_beta
+    num_spin_orbitals = molecule.num_orbitals * 2
     repulsion_energy = molecule.nuclear_repulsion_energy
     fermionic_op = FermionicOperator(h1,h2)
     qubit_op = fermionic_op.mapping(map_type=map_type, threshold=threshold)
-    return qubit_op, repulsion_energy
-    
+    return qubit_op, repulsion_energy, num_particles, num_spin_orbitals
+
+
 qubit_ops = {}
 for set in basis_sets:
-    qubit_ops["qubitOp_{0}".format(set)],_ = get_qubit_hamiltonian(0.735, set,'JORDAN_WIGNER')
+    qubit_ops["qubitOp_{0}".format(set)],_,_,_ = get_qubit_hamiltonian(0.735, set)
+
+for label in qubit_ops:
+    print("\n --- {} ---".format(label),qubit_ops[label])
 \end{lstlisting}
+
 \begin{verbatim}
 --- qubitOp_sto6g --- Representation: paulis, qubits: 4, size: 15
 
@@ -641,45 +640,41 @@ H = h_0 I + h_1Z_0 + h_2 Z_1 + h_3 Z_2 + h_4 Z_3
 +h_{14} X_0 X_1 Y_2 Y_3.
 \end{dmath}
 
+To be able to simulate the problem on a personal computer, it's better to choose the basis with fewer qubits. Therefore let's fix the basis set to STO-6G for convenience, but do keep in mind that working in a suitably large basis set is crucial for obtaining accurate results. 
 
 \begin{lstlisting}[language=Python]
-def exact_eigensolver(distance, basis_set, map_type):
+class hydrogen_molecule():
     """
-    Calculate the eigenvalue using NumPy eigensolver method
-
-    Args:
-        d: inter atomic distance
-        basis_set: computational chemistry basis set
-        map_type: encoding method
-
-    Returns: exact eigenvlaue
-
+    Class for describing a specific molecular configuration instance"
     """
-    qubit_op, repulsion = get_qubit_hamiltonian(distance,basis_set, map_type)
-    exact_solution = NumPyEigensolver(qubit_op).run()
-    exact_energy = np.real(exact_solution.eigenvalues) + repulsion
-    return exact_energy
-    
-distances = np.linspace(0.05, 2.5, 40)
+    def __init__(self, bond_length: float):
+        """
+        Args:
+            bond_length: inter-atomic distance
+        """
+        self.bond_length = bond_length
+        self.mapping = 'jordan_wigner'
+        self.basis_set = 'sto6g'
 
+        qubit_ops, repulsion, num_particles, num_spin_orbitals = get_qubit_hamiltonian(self.bond_length, self.basis_set, self.mapping)
 
+        grouper = AbelianGrouper()
 
+        self.qubit_hamiltonian = grouper.convert(qubit_ops.to_opflow())
+        self.num_particles = num_particles
+        self.num_spin_orbitals = num_spin_orbitals
+        self.repulsion = repulsion
+        self.num_qubits = self.qubit_hamiltonian.num_qubits
+
+        hamiltonian_matrixform = self.qubit_hamiltonian.to_matrix()
+        eigenvalues, _ = np.linalg.eigh(hamiltonian_matrixform)
+
+        self.groundstate_energy = eigenvalues[0]
 \end{lstlisting}
 
 
 
-
-{
-\color{red}
 \begin{itemize}
-    \item uccsd
-    \item vqe plots
-    \item different optimizers and time taken
-\end{itemize}
-}
-
-\begin{itemize}
-	\item comparing two different variational forms
 	\item different optimizers and effect of noise \\
     \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_vqe_spsa.ipynb}\\
     \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/aqua/vqe_convergence.ipynb}\\
@@ -688,42 +683,7 @@ distances = np.linspace(0.05, 2.5, 40)
 
 \end{itemize}
 
-\begin{lstlisting}[language=Python]
-import numpy as np
-    
-def incmatrix(genl1,genl2):
-    m = len(genl1)
-    n = len(genl2)
-    M = None #to become the incidence matrix
-    VT = np.zeros((n*m,1), int)  #dummy variable
-    
-    
-    return M
-\end{lstlisting}
-
 \input{./test.tex}
-
-\begin{lstlisting}[language=Python]
-import numpy as np
-    
-def incmatrix(genl1,genl2):
-    m = len(genl1)
-    n = len(genl2)
-    M = None #to become the incidence matrix
-    VT = np.zeros((n*m,1), int)  #dummy variable
-    
-    return M
-\end{lstlisting}
-
-
-
-
-
-
-
-
-
-
 
 
 
