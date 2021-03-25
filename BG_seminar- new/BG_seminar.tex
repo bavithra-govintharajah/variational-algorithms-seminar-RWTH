@@ -421,7 +421,7 @@ ansatz with truncation scheme & PSO & ground \& excited states & \cite{santagati
 Transmon qubits via cloud & deuteron & 2-3 & UCC & grid-scan & ground state & \cite{dumitrescu2018} \\
 \hline
 \end{tabular}
-\caption{Representative experimental demonstrations of the VQE algorithm using various quantum computer architectures \cite{cao2019}. \\
+\caption{\textbf{Representative experimental demonstrations of the VQE algorithm using various quantum computer architectures} \cite{cao2019}. \\
 Abbreviations: SPSA, simultaneous perturbation stochastic approximation; PSO, particle swarm optimization.}
 \label{BG:vqe_experiments}
 \end{table}
@@ -442,7 +442,7 @@ The VQE is a popular VQA candidate that has already entered the experimental reg
 \item Parameter update using a classical optimization routine
 \item Repetition of steps 2 and 3 until convergence criteria are satisfied. 
 \end{enumerate}
-Let us now apply the theory from previous sections to solve the problem under study in Example 1 from \ref{BG:ground_state_approx}. The goal is to analyze the energy landscape and estimate the ground state energy of $H_2$ molecule using VQE. Fig.~\ref{BG:vqe_loop} summarizes the important steps involved in solving this problem.
+ This section is based on Ref.~\cite{mcardle2020} and Ref.~\cite{kandala2017}. Let us now apply the theory from previous sections to solve the problem under study in Example 1 from \ref{BG:ground_state_approx}. The goal is to analyze the energy landscape and estimate the ground state energy of $H_2$ molecule using VQE. Fig.~\ref{BG:vqe_loop} summarizes the important steps involved in solving this problem.
 
 \paragraph{Before we begin:}The calculations and simulations given in this section are performed using Qiskit\footnote{At the time of writing, version 0.24.0}. Since $H_2$ is a small molecule, the problem is classically tractable and good classical benchmarking results are already available. Hence the reader will be able to replicate the results on their own with the limited computational resources of a personal computer.
 
@@ -450,18 +450,128 @@ Let us now apply the theory from previous sections to solve the problem under st
 \begin{figure}[h!]
 \centering
 \includegraphics[width=\textwidth]{BG_seminar- new/BG_vqe_loop.pdf}
-\caption{A flow chart adapted from \cite{omalley2016} describing the steps required to compute molecular energies using VQE. Here, steps inside the dashed box represents classical preparation.}
+\caption{\textbf{A flow chart adapted from \cite{omalley2016} describing the steps required to compute molecular energies using VQE.} Here, steps inside the dashed box represents classical preparation.}
 \label{BG:vqe_loop}
 \end{figure}
 
 \subsection{Classical pre-processing}
- As discussed in the Introduction, the focus will be on the tools developed to solve the electronic structure problem. Due to the hybrid approach, choices made during the classical pre-processing steps would also influence the overall performance and quantum resource requirements of the algorithm as discussed in \ref{BG:section_cost_function}. So let us begin by formulating our problem and translating it into the language of second quantization. This step is classically tractable after some approximations and for the case of the electronic structure problem, there are several computational chemistry packages readily available. In this example, Python-based Simulations of Chemistry Framework (PySCF) \cite{PYSCF} is used to obtain the molecular drivers required as input. The classical pre-processing stage might seem at first glance very simple with PySCF and Qiskit in terms of the number of lines of code required, but it is rich in physics. The aim of this section is to produce a self-contained summary of the essential knowledge required for quantum computation for molecular quantum mechanics, and the interested reader is referred to Ref.~\cite{helgaker2000}  and \cite{atkins2010} for further information.
+ As discussed in the Introduction, the focus will be on the tools developed to solve the electronic structure problem. Due to the hybrid approach, choices made during the classical pre-processing steps would also influence the overall performance and quantum resource requirements of the algorithm as discussed in \ref{BG:section_cost_function}. So let us begin by formulating our problem and translating it into the language of second quantization. This step is classically tractable after some approximations and for the case of the electronic structure problem, there are several computational chemistry packages readily available. In this example, Python-based Simulations of Chemistry Framework (PySCF) \cite{PYSCF} is used to obtain the molecular drivers required as input. The classical pre-processing stage might seem at first glance very simple with PySCF and Qiskit in terms of the number of lines of code required, but it is rich in physics. The aim of this section is to produce a self-contained short summary of the essential knowledge required for quantum computation for molecular quantum mechanics, and the interested reader is referred to Ref.~\cite{helgaker2000}  and \cite{atkins2010} for further information.
 
-\subsubsection{What is electronic structure problem?}
+\subsubsection{What is the electronic structure problem?}
 The fundamental goal in electronic-structure problems is obvious: solve for the ground-state energy of many-body interacting fermionic Hamiltonians. The Hamiltonian of a molecule consisting of $N_\alpha$ nuclei and $N_e$ electrons is
 \begin{dmath}
-    H = \underbrace{-\sum_i \frac{\hbar^2}{2m_e}\nabla_i^2 -\sum_\alpha \frac{\hbar^2}{2M_\alpha}\nabla_\alpha^2}_{\text{kinetic energy}}\underbrace{-\sum_{i,\alpha}\frac{e^2}{4\pi \epsilon_0}\frac{Z_\alpha}{\abs{\vec{r}_i - \vec{R}_\alpha}}+\frac{1}{2}\sum_{i\neq j}\frac{e^2}{4\pi \epsilon_0}\frac{1}{\abs{\vec{r}_i - \vec{r}_j}}+\frac{1}{2}\sum_{\alpha\neq \beta}\frac{e^2}{4\pi \epsilon_0}\frac{1}{\abs{\vec{R}_\alpha - \vec{R}_\beta}}}
+    H = -\sum_i \frac{\hbar^2}{2m_e}\nabla_i^2 -\sum_\alpha \frac{\hbar^2}{2M_\alpha}\nabla_\alpha^2-\sum_{i,\alpha}\frac{e^2}{4\pi \epsilon_0}\frac{Z_\alpha}{\abs*{\vec{r}_i - \vec{R}_\alpha}}+\frac{1}{2}\sum_{i\neq j}\frac{e^2}{4\pi \epsilon_0}\frac{1}{\abs*{\vec{r}_i - \vec{r}_j}}+\frac{1}{2}\sum_{\alpha\neq \beta}\frac{e^2}{4\pi \epsilon_0}\frac{Z_\alpha Z_\beta}{\abs*{\vec{R}_\alpha - \vec{R}_\beta}},
 \end{dmath}
+ where $M_\alpha$, $\vec{R}_\alpha$ and $Z_\alpha$ represent the mass, position and the atomic number of the $\alpha^{\text{th}}$ nucleus and $\vec{r}_i$ is the position of the $i^{\text{th}}$ electron. For conciseness, switching to atomic units and substituting $M_\alpha'=\frac{M_\alpha}{m_e}$ yields
+ \begin{equation}
+         H = -\sum_i \frac{\nabla_i^2}{2} -\sum_\alpha \frac{\nabla_\alpha^2}{2M_\alpha'}-\sum_{i,\alpha}\frac{Z_\alpha}{\abs*{\vec{r}_i - \vec{R}_\alpha}}+\frac{1}{2}\sum_{i\neq j}\frac{1}{\abs*{\vec{r}_i - \vec{r}_j}}+\frac{1}{2}\sum_{\alpha\neq \beta}\frac{Z_\alpha Z_\beta}{\abs*{\vec{R}_\alpha - \vec{R}_\beta}}.
+ \end{equation}
+Since our primary interest lies in solving this for molecules, where a nucleon is over 1000 times heavier than the electron, the Born-Oppenheimer approximation is applied. As a result, the problem is simplified for a given nuclear configuration where one needs to solve only an electronic Hamiltonian given by
+\begin{equation}
+    H_{\text{elec}} = -\sum_i \frac{\nabla_i^2}{2} -\sum_{i,\alpha}\frac{Z_\alpha}{\abs*{\vec{r}_i - \vec{R}_\alpha}}+\frac{1}{2}\sum_{i\neq j}\frac{1}{\abs*{\vec{r}_i - \vec{r}_j}}.
+\end{equation}
+The aim is to find energy eigenstates of $H_{\text{elec}}$ and the corresponding energy eigenvalues to an accuracy of at least $1.6 \times 10^{-3}$ hartree\footnote{1 hartree = $\frac{e^2}{4\pi\epsilon_0 a_0}$= 27.211 eV}, known as the \emph{chemical accuracy}. Knowing the energies up to chemical accuracy enables reaction rate calculations within an order of magnitude. This is one of the promises that one-day quantum computers hope to deliver.
+
+\subsubsection{All about quantization, basis sets and mapping}
+The state under consideration is an electronic wavefunction. This means the anti-symmetric nature of the wavefunction as a consequence of Pauli's exclusion principle should be taken into account. The anti-symmetrization can be accounted for in either \emph{first} or \emph{second} quantization methods. The names are largely due to historical reasons, but it's important to remember that the choice affects how the physical system is simulated on a quantum computer. First quantization methods retain the anti-symmetric nature of the wavefunctions explicitly whereas second quantization maintains it through correct exchange statistics and the properties of the field operators. The key difference in the representations becomes more prominent in the context of fermion to qubit mappings. Whether the simulation is done in first quantization or second quantization is distinct from whether a \emph{grid-based} method or \emph{basis set} method is used. The details of grid-based methods and basis set methods are beyond the scope of this chapter. Therefore a summary of the different methods are given in Table \ref{BG:first_second}. In the case of quantum simulation, the number of basis functions in the basis set and the quantization method used determines the number of gate operations required. For NISQ devices this leads to a compromise between the accuracy obtainable and the number of basis functions due to the limited qubit numbers. The number of qubits required to store the wavefunction in each quantization method is summarized in Table~\ref{BG:store_wavefunction}.
+\begin{table}[h!]
+\centering
+\begin{tabular}{l c} 
+ Quantization & Number of qubits \\ [0.5ex] 
+ \hline
+ First, basis sets & $N[\log_2(M)]$ \\ 
+ Second, basis sets & $M$ \\ [1ex] 
+ \hline
+\end{tabular}
+\caption{\textbf{The number of qubits required to store the wavefunction using different quantization methods.} $N$ is the number of simulated electrons in the problem, $M$ is the number of spin orbitals used in the basis set. The number of qubits can often be further reduced \cite{mcardle2020}.}
+\label{BG:store_wavefunction}
+\end{table}
+
+
+Once the quantization step is over, we proceed to the mapping step. Here the operators that act on \emph{indistinguishable} fermions to operators that act on \emph{distinguishable} qubits. To this end, an encoding method, which is just a map from the fermionic Fock space to the qubit Hilbert space is applied. This will lead to every fermionic state being represented by a qubit state. 
+
+There are multiple second quantization encoding methods, which are described next.  
+\begin{enumerate}
+    \item \emph{Jordan - Wigner encoding (JW)}
+    \begin{itemize}
+        \item Occupation number of the spin orbital is stored in the $\ket{0}$ and $\ket{1}$ state of a qubit (unoccupied and occupied respectively).
+        \item The creation operator $\hat{c}_j^\dagger$ of the electronic orbital is associated with a qubit $j$ via  
+        \begin{equation}
+            \hat{c}^\dagger_j \leftrightarrow \underbrace{\hat{Z}_1 \otimes \ldots \otimes \hat{Z}_{j-1}}_{\text{application of a phase}} \otimes \hat{Z}^\dagger_j\otimes \hat{I},
+            \end{equation}
+            and has two operations: changing the occupation number locally and applying a phase according to parity.
+        \item Stores the parity non-locally and occupation number locally.    
+        \item The large weight of the parity-counting phase can be costly for certain quantum simulation algorithms.
+    \end{itemize}
+    \item\emph{ Parity encoding (P) \cite{seeley2012}}
+    \begin{itemize}
+        \item It is the dual version of the JW mapping.
+        \item While JW stores the occupation number of each spin orbital in each qubit, the parity mapping stores the parity in each qubit.
+        \item Stores the parity locally and occupation number non-locally.
+        \item Parity operators are low weight while the occupation operators become high weight.
+    \end{itemize}
+    \item \emph{Bravyi-Kitaev encoding (BK) \cite{bravyi2002}}
+    \begin{itemize}
+        \item Combines the advantages of JW and P encding methods through non-trial transformation. 
+        \item Applies only for systems with a spin orbital number equal to a power of 2
+        \item BK mapping allows for simulation of interacting fermion systems on a graph where each node corresponds to a local fermionic mode and each edge represents a pairwise interaction \cite{cao2019}.
+    \end{itemize}
+    
+\end{enumerate}
+\subsection{Simulating the Hydrogen molecule}
+In our example of $H_2$ molecule we will use basis set method in second quantization. Let us first consider 
+
+\begin{landscape}
+\begin{table}[p]
+    \centering
+    \begin{tabular}{ m{11.5cm}m{11.5cm}  }
+
+Grid-based methods & Basis set methods \\ [0.5ex] 
+ \hline
+ \begin{itemize}
+     \item Wavefunction is evaluated on every point in a spatial grid
+\begin{itemize}
+    \item \emph{\textbf{First quantization:}} Wavefunction in position representation is explicitly anti-symmetrized. The $N$-electron wavefunction is given by
+ \begin{dmath*}
+     \ket{\Psi}= \int_{\vec{x}_1, \ldots, \vec{x}_N} \psi(\vec{x}_1, \ldots, \vec{x}_N)\mathcal{A}(\ket{\vec{x}_1, \ldots, \vec{x}_N}) d\vec{x}_1 \ldots d\vec{x}_N,
+ \end{dmath*}
+ where $\psi(\vec{x}_1, \ldots, \vec{x}_N) = \braket{\vec{x}_1, \ldots, \vec{x}_N}{\Psi}$, $\mathcal{A}$ denotes anti-symmetrization and $\vec{x}_i = (\vec{r}_i, \sigma_i)=(x_i, y_i, z_i, \sigma_i)$ gives the position and spin of the $i^{\text{th}}$ electron.
+  \item \emph{\textbf{Second quantization:}} Real space grid is described by a set of $\delta$ functions $\delta(r-r_i)$ positioned at $r_i$ which serve as basis. Creation operator becomes $\hat{c}^\dagger_{x_i,y_i,z_i,\sigma}$ which creates an electron with spin $\sigma$ at grid point $(x_i,y_i,z_i)$ in 3 dimensional space.
+\end{itemize}
+     \item Memory required to store wavefunction scales exponentially with the size of the system.
+     \item Useful when simulating systems where the Born-Oppenheimer approximation is not applicable
+     \item Grid-based methods in second quantization has not yet been used in any quantum or classical simulations \cite{mcardle2020}
+ \end{itemize}   &
+ 
+\begin{itemize}
+    \item Hamiltonian is projected onto $M$ basis functions $\{\phi_p(\vec{x}_i)\}$, $\vec{x}_i= (\vec{r}_i,\sigma_i)$ which approximate electron spin orbitals.
+    \item The $N$ electron wavefunction is written as a Slater determinant given by 
+    \begin{dmath*}
+    \psi (\vec{x}_i, \ldots, \vec{x}_{N-1}) = \frac{1}{\sqrt{N!}}
+    \begin{vmatrix}
+    \phi_0(\vec{x}_0) & \ldots & \phi_{M-1}(\vec{x}_0) \\
+    .  & . & .\\
+    . & . & . \\
+    \phi_0(\vec{x}_{N-1}) & \ldots & \phi_{M-1}(\vec{x}_{N-1}),
+    \end{vmatrix}
+    \end{dmath*}
+    and in occupation number representation in Fock space as
+    \begin{equation*}
+        \psi (\vec{x}_i, \ldots, \vec{x}_{N-1})= \ket{f} = \ket{f_{M-1},\ldots f_{p},\ldots f_{0}}
+    \end{equation*}
+    
+    \item Resource requirement is reduced by exploiting the knowledge on symmetry and the general spatial form of the orbital functions.
+    \item The number of basis functions $M$ used determines the number of qubits and gate operations required to solve a problem
+    \item Known as the \emph{Galerkin discretization}, which ensures that the energy converges to the true value from above as $M \rightarrow \infty$
+    \item Most common basis sets are the Slater-type orbitals (STOs), Gaussian-type orbitals (GTOs) and plane wave basis sets.
+\end{itemize}
+ \\
+ \hline
+\end{tabular}
+    \caption{\textbf{Overview of the grid-based methods and basis set methods used in computational many body problems.} }
+    \label{BG:first_second}
+\end{table}
+\end{landscape}
 
 
 {
