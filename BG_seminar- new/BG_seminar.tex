@@ -503,14 +503,14 @@ There are multiple second quantization encoding methods, which are described nex
         \item Stores the parity non-locally and occupation number locally.    
         \item The large weight of the parity-counting phase can be costly for certain quantum simulation algorithms.
     \end{itemize}
-    \item\emph{ Parity encoding (P) \cite{seeley2012}}
+    \item\emph{ Parity encoding (P)} \cite{seeley2012}
     \begin{itemize}
         \item It is the dual version of the JW mapping.
         \item While JW stores the occupation number of each spin orbital in each qubit, the parity mapping stores the parity in each qubit.
         \item Stores the parity locally and occupation number non-locally.
         \item Parity operators are low weight while the occupation operators become high weight.
     \end{itemize}
-    \item \emph{Bravyi-Kitaev encoding (BK) \cite{bravyi2002}}
+    \item \emph{Bravyi-Kitaev encoding (BK)} \cite{bravyi2002}
     \begin{itemize}
         \item Combines the advantages of JW and P encding methods through non-trial transformation. 
         \item Applies only for systems with a spin orbital number equal to a power of 2
@@ -519,8 +519,15 @@ There are multiple second quantization encoding methods, which are described nex
     
 \end{enumerate}
 \subsection{Simulating the Hydrogen molecule}
-In our example of $H_2$ molecule we will use basis set method in second quantization. Let us first consider 
-
+Now that we have a clear understanding both the quantum and classical parts of the algorithm it's time to use that to solve
+for the ground state energy of $H_2$ molecule using use basis set method in second quantization. 
+\paragraph{Choose the basis set functions.} An ideal choice of basis set function should be one that captures the physics of the problem, such that a good representation can be achieved using the smallest possible set. A good basis set \cite{cao2019}
+\begin{itemize}
+    \item allows systematic and fast converging extrapolation to the basis set limit
+    \item has a mathematical form which facilitates the evaluation of molecular integrals,
+    \item should not only describe energies but also other useful properties.
+\end{itemize}
+Let us pick the sets Slater-type orbitals with $6$ Gaussians (STO-nG with n=6), split valence basis 6-31G and correlation consistent polarized valence double $\zeta$ (cc-PVDZ), and observe the number of qubits required.  
 \begin{landscape}
 \begin{table}[p]
     \centering
