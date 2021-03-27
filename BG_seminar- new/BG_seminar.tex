@@ -76,7 +76,9 @@
 
 %
 \begin{abstract}
-Simulation of large quantum systems or solving large-scale linear algebraic problems is classically inefficient due to high computational costs. Quantum computers promise to unlock these uncharted territories, although fault-tolerant quantum computers will likely not be available soon. Quantum devices available at present have serious bottlenecks such as the limited number of qubits and noise that severely limit circuit depths. Variational Quantum Algorithms (VQAs) employ a quantum-classical hybrid approach to train a parametrized quantum circuit. They have emerged as promising candidates to address the constraints of near-term quantum computing. Various VQAs have now been proposed for several applications in various disciplines spanning physics, machine learning, quantum chemistry, and combinatorial optimization and they appear to the best hope for obtaining quantum advantage. Nevertheless, open questions remain including the trainability, accuracy, and efficiency of VQAs. In this chapter, an introduction to the concept of VQAs is presented. The key structure of these algorithms, their limitations, and their advantages are discussed in detail. Furthermore, an example of applying VQA to simulate small molecules is presented.
+Simulation of large quantum systems or solving large-scale linear algebraic problems is classically inefficient due to high computational costs. Quantum computers promise to unlock these uncharted territories, although fault-tolerant quantum computers will likely not be available soon. Quantum devices available at present have serious bottlenecks such as the limited number of qubits and noise that severely limit circuit depths.
+
+Variational Quantum Algorithms (VQAs) have emerged as promising candidates to address the constraints of near-term quantum computing. They employ a quantum-classical hybrid approach to train a parametrized quantum circuits. Various VQAs have now been proposed for several applications in various disciplines spanning physics, machine learning, quantum chemistry, and combinatorial optimization and they appear to the best hope for obtaining quantum advantage. Nevertheless, open questions remain including the trainability, accuracy, and efficiency of VQAs. In this chapter, an introduction to the concept of VQAs is presented. The key structure of these algorithms, their limitations, and their advantages are discussed in detail. Furthermore, an example of applying VQA to simulate small molecules is presented.
 \end{abstract}
 %
 %
@@ -84,17 +86,15 @@ Simulation of large quantum systems or solving large-scale linear algebraic prob
 %TODO Write Introduction
 
 
-When early quantum devices became available, it was clear that progress in both the algorithmic and the hardware side was going to require the realization of proof-of-principle implementations of quantum algorithms. The modest resource requirements and flexibility of variational quantum information processing compared to other algorithms such as the Shor's algorithm and the Quantum Phase Estimation (QPE) algorithm, positioned this approach as one of the first milestones in the road-map of quantum computing experiments. The introduction of the first Variational Quantum Algorithms (VQA) in 2014 coincided with the transition of experimental quantum computing from primarily an academic endeavor to an industrial enterprise. The inevitable question was, and still is: will these early noisy quantum devices deliver an advantage over classical computing and efficient solutions to complex problems? Hope is that the case, and it is believed that a viable path towards a definite affirmative answer lies in the further development and improvement of quantum variational approaches.
+When early quantum devices became available, it was clear that progress in both the algorithmic and the hardware side was going to require the realization of proof-of-principle implementations of quantum algorithms. The modest resource requirements and flexibility of variational quantum information processing compared to other algorithms such as the Shor's algorithm and the Quantum Phase Estimation (QPE) algorithm, positioned variational approach as one of the first milestones in the road-map of quantum computing experiments. The introduction of the first Variational Quantum Algorithms (VQA) in 2014 coincided with the transition of experimental quantum computing from primarily an academic endeavor to an industrial enterprise. The inevitable question was, and still is: will these early noisy quantum devices deliver an advantage over classical computing and efficient solutions to complex problems? Hope is that, this is the case, and it is believed that a viable path towards a definite affirmative answer lies in the further development and improvement of quantum variational approaches.
 
-One important aspect that marks experimental advancements in quantum computing is that the number of available physical qubits must exceed a specific threshold to explore classically intractable problems. At the moment of writing this document, the largest circuit model quantum processors reported comprise of just 10-100 qubits with error rates of $10^{-3} - 10^{-2}$. This is called the Noisy Intermediate Scale Quantum (NISQ) era, a term first coined by John Preskill in 2018 \cite{preskill2018}. NISQ devices are characterized by limited coherence times, lower gate fidelities, and fewer qubits. Therefore, NISQ devices will not have adequate resources to implement quantum error correction, and as a consequence, only shallow circuits are executable. However, these machines will be large enough to implement quantum dynamics that cannot be efficiently simulated with existing classical computers because classical computers are notoriously bad at simulating dynamics of highly entangled many-particle quantum systems \footnote{Even just storing arbitrary quantum states in classical computers is difficult because the amount of classical resources required to represent a given quantum state is related to the degree of entanglement of the state. This problem just gets worse when studying the dynamics. Check Exercise 4.46 in Ref.~\cite{nielsen2011}.}.
+One important aspect that marks experimental advancements in quantum computing is that the number of available physical qubits must exceed a specific threshold to explore classically intractable problems. At the time of writing this document, the largest circuit model quantum processors reported comprise of just 10-100 qubits with error rates of $10^{-3} - 10^{-2}$. This is called the Noisy Intermediate Scale Quantum (NISQ) era, a term first coined by John Preskill in 2018 \cite{preskill2018}. NISQ devices are characterized by limited coherence times, lower gate fidelities, and fewer qubits. Therefore, NISQ devices will not have adequate resources to implement quantum error correction, and as a consequence, only shallow circuits are executable. However, these machines will be large enough to implement quantum dynamics that cannot be efficiently simulated with existing classical computers because classical computers are notoriously bad at simulating dynamics of highly entangled many-particle quantum systems \footnote{Even just storing arbitrary quantum states in classical computers is difficult because the amount of classical resources required to represent a given quantum state is related to the degree of entanglement of the state. This problem just gets worse when studying the dynamics. Check Exercise 4.46 in Ref.~\cite{nielsen2011}.}.
 
 The very first VQAs; the Variational Quantum Eigensolver (VQE) \cite{peruzzo2014} and the Quantum Approximate Optimization Algorithm (QAOA) \cite{farhi2014} paved the way for a new paradigm in quantum algorithm design, by considering the limitations of NISQ devices. Before these proposals, quantum algorithmic development was aimed at fault-tolerant quantum computers with error corrections capabilities. In contrast, VQAs seek to remove the stringent requirements for coherent evolution by formulating the computation as an approximate optimization problem. Here, a functional\footnote{A functional is simply a mapping that takes a function as input and returns a scalar as output.} in the space of heuristic functions defined by a variational quantum circuit is optimized. From this perspective variational quantum information processing and VQAs concern a strategy for finding extremums of \emph{quantum functionals}, which are defined as mappings from the state space of a quantum system onto a scalar \cite{fontalvo2019}. The flexibility in the definition of these heuristics allows the expansion of operability of these approaches within the NISQ regime, circumventing the need for quantum error correction.
 
 The purpose of this chapter is to give a short introduction to the art of variational quantum algorithms. This chapter is brief but self-contained and only a solid knowledge of quantum mechanics is assumed. The reader is encouraged to go through Chapter 4 of Ref.~\cite{nielsen2011} beforehand to better understand the implementation of VQAs on actual quantum devices. 
 The chapter begins with a conceptual introduction to VQAs highlighting the motivation behind the use of variational methods on NISQ devices under Section \ref{BG:variational_quantum_algorithms}. The subsequent Sections \ref{BG:variational_ansatz},\ref{BG:section_cost_function}, \ref{BG:measurement_scheme} and \ref{BG:optimization_routine} delve deeper into concepts introduced in \ref{BG:variational_quantum_algorithms}. Finally a hands-on example is given under Section \ref{BG:hands_on} where a detailed analysis is performed on the application of the variational quantum eigensolver to solve the electronic structure problem of $H_2$ molecule using Qiskit \cite{Qiskit}.
-Basic familiarity with Hartree-Fock theory and post Hartree-Fock methods might prove useful in extending the hands-on example but it is not a requirement to understand the example. At the end of this chapter, the reader will feel comfortable with the use of VQAs to solve common optimization problems and have a clear overview of the theory to adjust various parts of the algorithm to suit one's needs.
-
-
+Basic familiarity with Hartree-Fock theory and post Hartree-Fock methods might prove useful in extending the hands-on example but it is not a requirement to understand the example. At the end of this chapter, the reader will hopefully feel comfortable with the use of VQAs to solve common optimization problems and have a clear overview of the theory to adjust various parts of the algorithm to suit one's needs.
 %
 
 \section{Variational quantum algorithms}
@@ -580,7 +580,27 @@ for the ground state energy of $H_2$ molecule using use basis set method in seco
 Let us first consider the sets Slater-type orbitals with $6$ Gaussians (STO-nG with n=3), split valence basis 6-31G and correlation consistent polarized valence double-$\zeta$ (cc-PVDZ) encoded using JW transformation and observe how the number of qubits vary.
 
 \begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
 import numpy as np
+import pylab
+from qiskit import Aer
+from qiskit.aqua import QuantumInstance, aqua_globals
+from qiskit.aqua.algorithms import NumPyEigensolver
+from qiskit.aqua.algorithms import VQE
+from qiskit.aqua.components.initial_states import Zero
+from qiskit.aqua.components.optimizers import COBYLA, SPSA, SLSQP
+from qiskit.chemistry import FermionicOperator
+from qiskit.chemistry.components.initial_states import HartreeFock
+from qiskit.chemistry.components.variational_forms import UCCSD
+from qiskit.chemistry.drivers import PySCFDriver, UnitsType
+from qiskit.circuit.library import EfficientSU2
+from qiskit.ignis.mitigation.measurement import CompleteMeasFitter
+from qiskit.providers.aer.noise import NoiseModel
+from qiskit.test.mock import *
+
+basis_sets = ['sto6g', '631g', 'ccpvdz']
+threshold = 0.00000001
+aqua_globals.random_seed = 500
 
 def get_qubit_hamiltonian(d, basis_set, map_type='jordan_wigner'):
     """
@@ -608,13 +628,14 @@ def get_qubit_hamiltonian(d, basis_set, map_type='jordan_wigner'):
     qubit_op = fermionic_op.mapping(map_type=map_type, threshold=threshold)
     return qubit_op, repulsion_energy, num_particles, num_spin_orbitals
 
-
 qubit_ops = {}
 for set in basis_sets:
     qubit_ops["qubitOp_{0}".format(set)],_,_,_ = get_qubit_hamiltonian(0.735, set)
 
 for label in qubit_ops:
     print("\n --- {} ---".format(label),qubit_ops[label])
+
+
 \end{lstlisting}
 
 \begin{verbatim}
@@ -640,48 +661,7 @@ H = h_0 I + h_1Z_0 + h_2 Z_1 + h_3 Z_2 + h_4 Z_3
 +h_{14} X_0 X_1 Y_2 Y_3.
 \end{dmath}
 
-To be able to simulate the problem on a personal computer, it's better to choose the basis with fewer qubits. Therefore let's fix the basis set to STO-6G for convenience, but do keep in mind that working in a suitably large basis set is crucial for obtaining accurate results. 
-
-\begin{lstlisting}[language=Python]
-class hydrogen_molecule():
-    """
-    Class for describing a specific molecular configuration instance"
-    """
-    def __init__(self, bond_length: float):
-        """
-        Args:
-            bond_length: inter-atomic distance
-        """
-        self.bond_length = bond_length
-        self.mapping = 'jordan_wigner'
-        self.basis_set = 'sto6g'
-
-        qubit_ops, repulsion, num_particles, num_spin_orbitals = get_qubit_hamiltonian(self.bond_length, self.basis_set, self.mapping)
-
-        grouper = AbelianGrouper()
-
-        self.qubit_hamiltonian = grouper.convert(qubit_ops.to_opflow())
-        self.num_particles = num_particles
-        self.num_spin_orbitals = num_spin_orbitals
-        self.repulsion = repulsion
-        self.num_qubits = self.qubit_hamiltonian.num_qubits
-
-        hamiltonian_matrixform = self.qubit_hamiltonian.to_matrix()
-        eigenvalues, _ = np.linalg.eigh(hamiltonian_matrixform)
-
-        self.groundstate_energy = eigenvalues[0]
-\end{lstlisting}
-
-
-
-\begin{itemize}
-	\item different optimizers and effect of noise \\
-    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_vqe_spsa.ipynb}\\
-    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/aqua/vqe_convergence.ipynb}\\
-    \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/aqua/simulations_with_noise_and_measurement_error_mitigation.ipynb} \\
-     \url{https://github.com/bavithra-govintharajah/qiskit-community-tutorials/blob/master/chemistry/h2_vqe_initial_point.ipynb}
-
-\end{itemize}
+To be able to simulate the problem on a personal computer, it's better to choose the basis that will result in fewer qubits. Therefore let's fix the basis set to STO-6G for convenience, but do keep in mind that working in a suitably large basis set is crucial for obtaining accurate results. 
 
 \input{./test.tex}
 
