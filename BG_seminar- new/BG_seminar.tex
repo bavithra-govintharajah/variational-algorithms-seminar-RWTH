@@ -10,6 +10,7 @@
 \usepackage{tikz}
 \usepackage{lscape} 
 \usepackage{breqn}
+\usepackage{fancyvrb}
 
 \usepackage{pgfplots}
 \DeclareUnicodeCharacter{2212}{−}
@@ -33,8 +34,8 @@
     keywordstyle=\color{magenta},
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\small,
-    breakatwhitespace=false,         
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=true,         
     breaklines=true,                 
     keepspaces=true,                 
     numbers=left, 
@@ -76,9 +77,7 @@
 
 %
 \begin{abstract}
-Simulation of large quantum systems or solving large-scale linear algebraic problems is classically inefficient due to high computational costs. Quantum computers promise to unlock these uncharted territories, although fault-tolerant quantum computers will likely not be available soon. Quantum devices available at present have serious bottlenecks such as the limited number of qubits and noise that severely limit circuit depths.
-
-Variational Quantum Algorithms (VQAs) have emerged as promising candidates to address the constraints of near-term quantum computing. They employ a quantum-classical hybrid approach to train a parametrized quantum circuits. Various VQAs have now been proposed for several applications in various disciplines spanning physics, machine learning, quantum chemistry, and combinatorial optimization and they appear to the best hope for obtaining quantum advantage. Nevertheless, open questions remain including the trainability, accuracy, and efficiency of VQAs. In this chapter, an introduction to the concept of VQAs is presented. The key structure of these algorithms, their limitations, and their advantages are discussed in detail. Furthermore, an example of applying VQA to simulate small molecules is presented.
+Simulation of large quantum systems or solving large-scale linear algebraic problems is classically inefficient due to high computational costs. Quantum computers promise to unlock these uncharted territories, although fault-tolerant quantum computers will likely not be available soon. Quantum devices available at present have serious bottlenecks such as the limited number of qubits and noise that severely limit circuit depths.Variational Quantum Algorithms (VQAs) have emerged as promising candidates to address the constraints of near-term quantum computing. They employ a quantum-classical hybrid approach to train a parametrized quantum circuits. Various VQAs have now been proposed for several applications in various disciplines spanning physics, machine learning, quantum chemistry, and combinatorial optimization and they appear to the best hope for obtaining quantum advantage. Nevertheless, open questions remain including the trainability, accuracy, and efficiency of VQAs. In this chapter, an introduction to the concept of VQAs is presented. The key structure of these algorithms, their limitations, and their advantages are discussed in detail. Furthermore, an example of applying VQA to simulate small molecules is presented.
 \end{abstract}
 %
 %
@@ -577,30 +576,35 @@ for the ground state energy of $H_2$ molecule using use basis set method in seco
     \item has a mathematical form which facilitates the evaluation of molecular integrals,
     \item should not only describe energies but also other useful properties.
 \end{itemize}
-Let us first consider the sets Slater-type orbitals with $6$ Gaussians (STO-nG with n=3), split valence basis 6-31G and correlation consistent polarized valence double-$\zeta$ (cc-PVDZ) encoded using JW transformation and observe how the number of qubits vary.
+Let us first consider the sets Slater-type orbitals with $3$ Gaussians (STO-nG with n=3), split valence basis 6-31G and correlation consistent polarized valence double-$\zeta$ (cc-PVDZ) encoded using JW transformation and observe how the number of qubits vary.
 
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
 import numpy as np
 import pylab
+import tikzplotlib
 from qiskit import Aer
 from qiskit.aqua import QuantumInstance, aqua_globals
 from qiskit.aqua.algorithms import NumPyEigensolver
 from qiskit.aqua.algorithms import VQE
 from qiskit.aqua.components.initial_states import Zero
-from qiskit.aqua.components.optimizers import COBYLA, SPSA, SLSQP
+from qiskit.aqua.components.optimizers import SPSA
+from qiskit.aqua.operators import WeightedPauliOperator
 from qiskit.chemistry import FermionicOperator
 from qiskit.chemistry.components.initial_states import HartreeFock
 from qiskit.chemistry.components.variational_forms import UCCSD
 from qiskit.chemistry.drivers import PySCFDriver, UnitsType
 from qiskit.circuit.library import EfficientSU2
 from qiskit.ignis.mitigation.measurement import CompleteMeasFitter
+from qiskit.providers.aer import QasmSimulator, AerProvider
 from qiskit.providers.aer.noise import NoiseModel
 from qiskit.test.mock import *
 
-basis_sets = ['sto6g', '631g', 'ccpvdz']
+plt.rcParams["figure.dpi"] = 100
+plt.style.use("seaborn")
+
+basis_sets = ['sto3g', '631g', 'ccpvdz']
 threshold = 0.00000001
-aqua_globals.random_seed = 500
 
 def get_qubit_hamiltonian(d, basis_set, map_type='jordan_wigner'):
     """
@@ -627,6 +631,7 @@ def get_qubit_hamiltonian(d, basis_set, map_type='jordan_wigner'):
     fermionic_op = FermionicOperator(h1,h2)
     qubit_op = fermionic_op.mapping(map_type=map_type, threshold=threshold)
     return qubit_op, repulsion_energy, num_particles, num_spin_orbitals
+    
 
 qubit_ops = {}
 for set in basis_sets:
@@ -634,17 +639,15 @@ for set in basis_sets:
 
 for label in qubit_ops:
     print("\n --- {} ---".format(label),qubit_ops[label])
-
-
 \end{lstlisting}
 
-\begin{verbatim}
---- qubitOp_sto6g --- Representation: paulis, qubits: 4, size: 15
+\begin{Verbatim}[fontsize=\footnotesize]
+--- qubitOp_sto3g --- Representation: paulis, qubits: 4, size: 15
 
---- qubitOp_631g --- Representation: paulis, qubits: 8, size: 185
+ --- qubitOp_631g --- Representation: paulis, qubits: 8, size: 185
 
---- qubitOp_ccpvdz --- Representation: paulis, qubits: 20, size: 2951
-\end{verbatim}
+ --- qubitOp_ccpvdz --- Representation: paulis, qubits: 20, size: 2951
+\end{Verbatim}
 
 According to the output, \verb|qubits| represent the number of qubits needed and \verb|size| represent the number of Pauli strings in the Hamiltonian written as a weighted sum. For example, the 4 qubit Hamiltonian obtained with STO-nG basis set and JW encoding above is the sum of 15 weighted Pauli strings given by
 \begin{dmath}
@@ -661,10 +664,203 @@ H = h_0 I + h_1Z_0 + h_2 Z_1 + h_3 Z_2 + h_4 Z_3
 +h_{14} X_0 X_1 Y_2 Y_3.
 \end{dmath}
 
-To be able to simulate the problem on a personal computer, it's better to choose the basis that will result in fewer qubits. Therefore let's fix the basis set to STO-6G for convenience, but do keep in mind that working in a suitably large basis set is crucial for obtaining accurate results. 
+To be able to simulate the problem on a personal computer, it's better to choose the basis that will result in fewer qubits. Therefore let's fix the basis set to STO-3G for convenience, but do keep in mind that working in a suitably large basis set is crucial for obtaining accurate results. 
 
-\input{./test.tex}
+\begin{lstlisting}[language=Python]
+bond_lengths = np.linspace(0.1, 3.5, 30)
 
+devices = ["fake_valencia", "fake_valencia_with_mitigation"]
+
+def construct_qinstance(device):
+    """
+    Create a quantum instance with required backend properties including 
+    noise models
+
+    Args: 
+        device:  high performance simulator backend to be used
+            qasm_simulator : ideal multi-shot execution 
+            fake_valencia : simulation of an actual device backend
+            fake_valencia_with_mitigation :error mitigation applied
+
+    Returns: QuantumInstance obj
+
+    """
+    simulator_backend = Aer.get_backend('qasm_simulator')
+    device_backend = FakeValencia()
+    qubit_connectivity = device_backend.configuration().coupling_map
+    noise_model = NoiseModel.from_backend(device_backend)
+
+    if device == "qasm_ideal":
+        qinstance=QuantumInstance(backend=simulator_backend,
+                                  seed_simulator=137)
+
+    elif device == "fake_valencia":
+        simulator = QasmSimulator(provider=AerProvider(), 
+                                  method='density_matrix')
+        
+        qinstance = QuantumInstance(backend=simulator,
+                                    noise_model=noise_model,
+                                    coupling_map=qubit_connectivity,
+                                    seed_simulator=137,
+                                    seed_transpiler=137)
+
+    elif device == "fake_valencia_with_mitigation":
+        simulator = QasmSimulator(provider=AerProvider(), 
+                                  method='density_matrix')
+        
+        qinstance = QuantumInstance(backend=simulator,
+                                    seed_simulator=137,
+                                    seed_transpiler=137,
+                                    noise_model=noise_model,
+                                    measurement_error_mitigation_cls = CompleteMeasFitter,
+                                    cals_matrix_refresh_period=30)
+    return qinstance
+    
+    
+exact_energies = []
+
+vqe_energies_effSU2 = []
+vqe_energies_uccsd = []
+vqe_energies_effSU2_fake = []
+vqe_energies_effSU2_fake_mit = []
+
+
+counts_effSU2 = []
+values_effSU2 = []
+counts_effSU2_fake = []
+values_effSU2_fake = []
+counts_effSU2_fake_mit = []
+values_effSU2_fake_mit = []
+
+counts_uccsd = []
+values_uccsd = []
+
+def store_intermediate_result_uccsd(eval_count, parameters, mean, std):
+    """
+    Callback function for VQE that enables storange of intermediate values
+    Args:
+        eval_count: number of evaluations for convergence
+        parameters: variational paratmeters
+        mean: mean value
+        std: standard deviation
+
+    Returns:
+        counts, mean
+
+    """
+    counts_uccsd.append(eval_count)
+    values_uccsd.append(mean)
+    return counts_uccsd, values_uccsd
+
+def store_intermediate_result_effSU2(eval_count, parameters, mean, std):
+    counts_effSU2.append(eval_count)
+    values_effSU2.append(mean)
+    return counts_effSU2, values_effSU2
+
+def store_intermediate_result_effSU2_fake(eval_count, parameters, mean, std):
+    counts_effSU2_fake.append(eval_count)
+    values_effSU2_fake.append(mean)
+    return counts_effSU2_fake, values_effSU2_fake
+
+def store_intermediate_result_effSU2_fake_mit(eval_count, parameters, mean, std):
+    counts_effSU2_fake_mit.append(eval_count)
+    values_effSU2_fake_mit.append(mean)
+    return counts_effSU2_fake_mit, values_effSU2_fake_mit
+    
+    
+for dist in bond_lengths:
+    qubitOp, shift, num_particles, num_spin_orbitals = get_qubit_hamiltonian(dist,basis_set='sto3g')
+    result = NumPyEigensolver(qubitOp).run()
+    exact_energy = np.real(result.eigenvalues) + shift
+    exact_energies.append(exact_energy) 
+    initial_state = HartreeFock(num_spin_orbitals,
+                                num_particles,
+                                two_qubit_reduction=False,
+                                qubit_mapping='jordan_wigner')
+    optimizer = SPSA(maxiter=200)
+
+    ansatz = [UCCSD(num_orbitals= num_spin_orbitals,
+                    num_particles= num_particles,
+                    initial_state= initial_state,
+                    qubit_mapping='jordan_wigner',
+                    two_qubit_reduction=False,),
+              EfficientSU2(num_qubits=qubitOp.num_qubits,
+                           su2_gates=['rz','rx','rz'],
+                           initial_state=Zero(qubitOp.num_qubits))]
+    for psi in ansatz:
+        if psi == ansatz[0]:
+            print("----UCCSD----")
+            vqe = VQE(qubitOp, psi, optimizer, callback=store_intermediate_result_uccsd)
+            vqe_result = np.real(vqe.run(construct_qinstance('qasm_ideal'))['eigenvalue'] + shift)
+            vqe_energies_uccsd.append(vqe_result)
+            print("Interatomic Distance:", np.round(dist, 2), "VQE Result:", vqe_result)
+
+        elif psi == ansatz[1]:
+            print("----Hardware Efficient Ansatz----")
+            vqe = VQE(qubitOp, psi, optimizer, callback=store_intermediate_result_effSU2)
+            vqe_result = np.real(vqe.run(construct_qinstance('qasm_ideal'))['eigenvalue'] + shift)
+            vqe_energies_effSU2.append(vqe_result)
+            print("Interatomic Distance:", np.round(dist, 2), "VQE Result:", vqe_result)
+
+            for device in devices:
+                if device == "fake_valencia":
+                    vqe = VQE(qubitOp, psi, optimizer, callback=store_intermediate_result_effSU2_fake)
+                    vqe_result = np.real(vqe.run(construct_qinstance(device))['eigenvalue'] + shift)
+                    vqe_energies_effSU2_fake.append(vqe_result)
+                elif device == "fake_valencia_with_mitigation":
+                    vqe = VQE(qubitOp, psi, optimizer, callback=store_intermediate_result_effSU2_fake_mit)
+                    vqe_result = np.real(vqe.run(construct_qinstance(device))['eigenvalue'] + shift)
+                    vqe_energies_effSU2_fake_mit.append(vqe_result)
+                print('---{}---'.format(device),"Interatomic Distance:", np.round(dist, 2), "VQE Result:", vqe_result)
+    
+\end{lstlisting}
+
+\begin{Verbatim}[fontsize=\footnotesize]
+    ----UCCSD----
+Interatomic Distance: 0.1 VQE Result: 2.701856471576982
+----Hardware Efficient Ansatz----
+Interatomic Distance: 0.1 VQE Result: 2.9347999030682512
+---fake_valencia--- Interatomic Distance: 0.1 VQE Result: 3.1138882979396207
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.1 VQE Result: 3.056281431884058
+----UCCSD----
+Interatomic Distance: 0.22 VQE Result: -0.04146826459933539
+----Hardware Efficient Ansatz----
+Interatomic Distance: 0.22 VQE Result: 0.48193291740097566
+---fake_valencia--- Interatomic Distance: 0.22 VQE Result: 1.2499581358778822
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.22 VQE Result: 0.5163915095262528
+----UCCSD----
+Interatomic Distance: 0.33 VQE Result: -0.7439000354402978
+----Hardware Efficient Ansatz----
+Interatomic Distance: 0.33 VQE Result: -0.3377294339279444
+---fake_valencia--- Interatomic Distance: 0.33 VQE Result: 0.6810255447288369
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.33 VQE Result: 1.3199107512583852
+----UCCSD----
+Interatomic Distance: 0.45 VQE Result: -0.9978597990661131
+----Hardware Efficient Ansatz----
+Interatomic Distance: 0.45 VQE Result: -0.5175581261553741
+---fake_valencia--- Interatomic Distance: 0.45 VQE Result: 0.20912188767372275
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.45 VQE Result: 0.15094102735811865
+   .   .   .   .   .   .   .   .   .   .   .   .
+   .   .   .   .   .   .   .   .   .   .   .   .
+   .   .   .   .   .   .   .   .   .   .   .   .
+   .   .   .   .   .   .   .   .   .   .   .   .
+\end{Verbatim}
+
+\begin{lstlisting}[language=Python]
+plt.plot(bond_lengths, exact_energies, label='NumPy Minimum Eigensolver')
+plt.plot(bond_lengths, vqe_energies_effSU2, label='VQE- Hardware efficient ansatz')
+plt.scatter(bond_lengths, vqe_energies_effSU2_fake, label='VQE- Hardware efficient ansatz - Valencia', color='m', marker='o')
+plt.scatter(bond_lengths, vqe_energies_effSU2_fake_mit, label='VQE- Hardware efficient ansatz - Valencia - error mit', color='b', marker='o')
+plt.plot(bond_lengths, vqe_energies_uccsd, label='VQE- UCCSD')
+plt.xlabel('Interatomic distance')
+plt.ylabel('Energy')
+plt.title(r'$H_2$ Ground State Energy')
+plt.legend(loc='upper right')
+\end{lstlisting}
+
+\input{./BG_ansatz_comparison.tex}    
+
+It's clear from the plot, how the noise from hardware can influence the calculation even for something small as the $H_2$ in STO-3G basis. Changing the basis set to a different one will lead to more qubits and deeper circuits. In principle it's possible to achieve reasonable good results with the hardware efficient ansatz. This simulation is just an exercise and hence doesn't give extremely good results, but very accurate results were achieved for $H_2$ with the hardware ansatz in Ref.~\cite{kandala2017}. As for the UCCSD ansatz, it almost coincides with the exact value calculation but entanglement requirements and deeper circuits will be a problem when extending it to larger molecules. As an exercise one can play around with making the optimization better using a different optimizer or initializing the optimizer with a suitable initial value. Another interesting task would be to look at how the optimizer converges. The function \verb| store_intermediate_result_| will store the intermediate values that the user can retrieve through the VQE callback. One can look at the execution counts to understand how the optimizer is performing. This usually falls into the topic of classical optimization and is beyond the scope of the example. 
 
 
 %
