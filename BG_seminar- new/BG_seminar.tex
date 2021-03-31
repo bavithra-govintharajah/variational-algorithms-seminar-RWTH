@@ -785,7 +785,7 @@ for dist in bond_lengths:
                     qubit_mapping='jordan_wigner',
                     two_qubit_reduction=False,),
               EfficientSU2(num_qubits=qubitOp.num_qubits,
-                           su2_gates=['rz','rx','rz'],
+                           entanglement='linear',
                            initial_state=Zero(qubitOp.num_qubits))]
     for psi in ansatz:
         if psi == ansatz[0]:
@@ -814,44 +814,66 @@ for dist in bond_lengths:
                 print('---{}---'.format(device),"Interatomic Distance:", np.round(dist, 2), "VQE Result:", vqe_result)
     
 \end{lstlisting}
-
 \begin{Verbatim}[fontsize=\footnotesize]
-    ----UCCSD----
-Interatomic Distance: 0.1 VQE Result: 2.701856471576982
-----Hardware Efficient Ansatz----
-Interatomic Distance: 0.1 VQE Result: 2.9347999030682512
----fake_valencia--- Interatomic Distance: 0.1 VQE Result: 3.1138882979396207
----fake_valencia_with_mitigation--- Interatomic Distance: 0.1 VQE Result: 3.056281431884058
 ----UCCSD----
-Interatomic Distance: 0.22 VQE Result: -0.04146826459933539
+Interatomic Distance: 0.1 VQE Result: 2.7119857007258554
 ----Hardware Efficient Ansatz----
-Interatomic Distance: 0.22 VQE Result: 0.48193291740097566
----fake_valencia--- Interatomic Distance: 0.22 VQE Result: 1.2499581358778822
----fake_valencia_with_mitigation--- Interatomic Distance: 0.22 VQE Result: 0.5163915095262528
+Interatomic Distance: 0.1 VQE Result: 3.3340488838888866
+---fake_valencia--- Interatomic Distance: 0.1 VQE Result: 4.139296024741463
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.1 VQE Result: 3.90308358318452
+
 ----UCCSD----
-Interatomic Distance: 0.33 VQE Result: -0.7439000354402978
+Interatomic Distance: 0.24 VQE Result: -0.2514831954357013
 ----Hardware Efficient Ansatz----
-Interatomic Distance: 0.33 VQE Result: -0.3377294339279444
----fake_valencia--- Interatomic Distance: 0.33 VQE Result: 0.6810255447288369
----fake_valencia_with_mitigation--- Interatomic Distance: 0.33 VQE Result: 1.3199107512583852
+Interatomic Distance: 0.24 VQE Result: 1.4645029490669041
+---fake_valencia--- Interatomic Distance: 0.24 VQE Result: 1.233062149233312
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.24 VQE Result: 1.4417877166500799
+
 ----UCCSD----
-Interatomic Distance: 0.45 VQE Result: -0.9978597990661131
+Interatomic Distance: 0.38 VQE Result: -0.8781735458694451
 ----Hardware Efficient Ansatz----
-Interatomic Distance: 0.45 VQE Result: -0.5175581261553741
----fake_valencia--- Interatomic Distance: 0.45 VQE Result: 0.20912188767372275
----fake_valencia_with_mitigation--- Interatomic Distance: 0.45 VQE Result: 0.15094102735811865
+Interatomic Distance: 0.38 VQE Result: -0.4645055062588499
+---fake_valencia--- Interatomic Distance: 0.38 VQE Result: 0.5091323601539339
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.38 VQE Result: 0.7053884629541658
+
+----UCCSD----
+Interatomic Distance: 0.52 VQE Result: -1.077946447019994
+----Hardware Efficient Ansatz----
+Interatomic Distance: 0.52 VQE Result: -1.0465178360766256
+---fake_valencia--- Interatomic Distance: 0.52 VQE Result: 0.2101641377953375
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.52 VQE Result: 0.43395689781122093
+
+----UCCSD----
+Interatomic Distance: 0.67 VQE Result: -1.126834155799024
+----Hardware Efficient Ansatz----
+Interatomic Distance: 0.67 VQE Result: -0.8147573466213908
+---fake_valencia--- Interatomic Distance: 0.67 VQE Result: -0.21131100514472856
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.67 VQE Result: 0.0006752562516127991
+
+----UCCSD----
+Interatomic Distance: 0.81 VQE Result: -1.1410969468908667
+----Hardware Efficient Ansatz----
+Interatomic Distance: 0.81 VQE Result: -1.0559514724145356
+---fake_valencia--- Interatomic Distance: 0.81 VQE Result: -0.24018451331369006
+---fake_valencia_with_mitigation--- Interatomic Distance: 0.81 VQE Result: -0.028159296028826053
+
+----UCCSD----
+Interatomic Distance: 0.95 VQE Result: -1.1066470715561798
+----Hardware Efficient Ansatz----
+Interatomic Distance: 0.95 VQE Result: -0.981918023471895
+---fake_valencia--- Interatomic Distance: 0.95 VQE Result: -0.35585277698967366
    .   .   .   .   .   .   .   .   .   .   .   .
    .   .   .   .   .   .   .   .   .   .   .   .
    .   .   .   .   .   .   .   .   .   .   .   .
    .   .   .   .   .   .   .   .   .   .   .   .
 \end{Verbatim}
-
 \begin{lstlisting}[language=Python]
 plt.plot(bond_lengths, exact_energies, label='NumPy Minimum Eigensolver')
-plt.plot(bond_lengths, vqe_energies_effSU2, label='VQE- Hardware efficient ansatz')
-plt.scatter(bond_lengths, vqe_energies_effSU2_fake, label='VQE- Hardware efficient ansatz - Valencia', color='m', marker='o')
-plt.scatter(bond_lengths, vqe_energies_effSU2_fake_mit, label='VQE- Hardware efficient ansatz - Valencia - error mit', color='b', marker='o')
-plt.plot(bond_lengths, vqe_energies_uccsd, label='VQE- UCCSD')
+plt.scatter(bond_lengths, vqe_energies_effSU2, label='VQE- Hardware efficient ansatz', color='g', marker='o')
+plt.scatter(bond_lengths, vqe_energies_effSU2_fake, label='VQE- Hardware efficient ansatz - Valencia', marker='o')
+plt.scatter(bond_lengths, vqe_energies_effSU2_fake_mit, label='VQE- Hardware efficient ansatz - Valencia - error mit', color='m', marker='o')
+plt.scatter(bond_lengths, vqe_energies_uccsd, label='VQE- UCCSD', color='r', marker='o')
+
 plt.xlabel('Interatomic distance')
 plt.ylabel('Energy')
 plt.title(r'$H_2$ Ground State Energy')
@@ -860,7 +882,7 @@ plt.legend(loc='upper right')
 
 \input{./BG_ansatz_comparison.tex}    
 
-It's clear from the plot, how the noise from hardware can influence the calculation even for something small as the $H_2$ in STO-3G basis. Changing the basis set to a different one will lead to more qubits and deeper circuits. In principle it's possible to achieve reasonable good results with the hardware efficient ansatz. This simulation is just an exercise and hence doesn't give extremely good results, but very accurate results were achieved for $H_2$ with the hardware ansatz in Ref.~\cite{kandala2017}. As for the UCCSD ansatz, it almost coincides with the exact value calculation but entanglement requirements and deeper circuits will be a problem when extending it to larger molecules. As an exercise one can play around with making the optimization better using a different optimizer or initializing the optimizer with a suitable initial value. Another interesting task would be to look at how the optimizer converges. The function \verb| store_intermediate_result_| will store the intermediate values that the user can retrieve through the VQE callback. One can look at the execution counts to understand how the optimizer is performing. This usually falls into the topic of classical optimization and therefore omitted from this example. 
+It's clear from the plot, how the noise from hardware can influence the calculation even for something small as the $H_2$ in STO-3G basis. Changing the basis set to a different one will lead to more qubits and deeper circuits. In principle it's possible to achieve reasonable good results with the hardware efficient ansatz. This simulation is just an exercise and hence doesn't give extremely good results, but very accurate results were achieved for $H_2$ with the hardware ansatz in Ref.~\cite{kandala2017}. As for the UCCSD ansatz, it almost coincides with the exact value calculation but entanglement requirements and deeper circuits will be a problem when extending it to larger molecules. As an exercise one can play around with making the optimization better using a different optimizer or initializing the optimizer with a suitable initial value. Another interesting task would be to look at how the optimizer converges. The function \verb| store_intermediate_result| will store the intermediate values that the user can retrieve through the VQE callback. One can look at the execution counts to understand how the optimizer is performing. This usually falls into the topic of classical optimization and therefore omitted from this example. 
 
 
 %
